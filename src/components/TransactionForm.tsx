@@ -28,8 +28,7 @@ const CATEGORIES = [
 export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   
   // Update date if defaultDate changes
@@ -48,6 +47,7 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!category.trim()) return;
     const parsedAmount = parseFloat(amount || '0');
     if (!isEstimate && (!amount || isNaN(parsedAmount))) return;
 
@@ -58,8 +58,8 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
     await onAdd({
       amount: parsedAmount,
       type,
-      category,
-      description: description || '',
+      category: category.trim(),
+      description: '',
       date: selectedDate,
       userId,
       isEstimate,
@@ -70,7 +70,7 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
     });
 
     setAmount('');
-    setDescription('');
+    setCategory('');
     setRecurring(false);
     setIsEstimate(false);
     setReminderEnabled(false);
@@ -101,62 +101,51 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Importo</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-mono">€</span>
-            <input
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              disabled={isEstimate && !amount}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
-              required={!isEstimate}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Categoria</label>
-          <div className="relative">
-            <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none transition-all cursor-pointer"
-            >
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Data</label>
-          <div className="relative">
-            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Nota (opzionale)</label>
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Descrizione</label>
           <div className="relative">
             <FileText size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Aggiungi una nota..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Esempio: Assicurazione Auto, Stipendio..."
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              required
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Importo</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-mono">€</span>
+              <input
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                disabled={isEstimate && !amount}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
+                required={!isEstimate}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Data</label>
+            <div className="relative">
+              <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
           </div>
         </div>
       </div>

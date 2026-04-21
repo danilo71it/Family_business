@@ -48,7 +48,7 @@ export function TransactionList({ transactions, onDelete }: Props) {
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
             <span className={`font-mono font-bold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate ? 'text-amber-600' : 'text-gray-900')}`}>
-              {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+              {t.amount === 0 ? '---' : `${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`}
             </span>
             <button
               onClick={() => onDelete(t.id)}

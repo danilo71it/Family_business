@@ -52,7 +52,7 @@ export function Stats({ transactions }: Props) {
 
       {chartData.length > 0 && (
         <div className="md:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Uscite per Categoria</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Dettaglio Uscite</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

@@ -15,6 +15,7 @@ export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
   const { transactions, group, loading: financeLoading, addTransaction, deleteTransaction, createGroup } = useFinance(profile?.groupId || null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
+  const [summaryMonth, setSummaryMonth] = useState(new Date());
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
@@ -25,6 +26,13 @@ export default function App() {
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 5);
   }, [transactions]);
+
+  const filteredTransactionsByMonth = useMemo(() => {
+    return transactions.filter(t => 
+      t.date.getMonth() === summaryMonth.getMonth() && 
+      t.date.getFullYear() === summaryMonth.getFullYear()
+    );
+  }, [transactions, summaryMonth]);
 
   const filteredTransactionsByDate = useMemo(() => {
     if (!selectedDate) return transactions;
@@ -161,14 +169,16 @@ export default function App() {
 
         {viewMode === 'summary' ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <Stats transactions={transactions} />
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight capitalize">
+                Riepilogo - {format(summaryMonth, 'MMMM yyyy', { locale: it })}
+              </h2>
+            </div>
+            <Stats transactions={filteredTransactionsByMonth} />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5">
-                <TransactionForm onAdd={addTransaction} userId={user.uid} />
-              </div>
-              <div className="lg:col-span-7 space-y-6">
+              <div className="lg:col-span-12 space-y-6">
                 <h2 className="text-lg font-black text-gray-900 tracking-tight">Registro Transazioni</h2>
-                <TransactionList transactions={transactions} onDelete={deleteTransaction} />
+                <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} />
               </div>
             </div>
           </div>
@@ -178,6 +188,8 @@ export default function App() {
               <div className="lg:col-span-8">
                 <CalendarView 
                   transactions={transactions} 
+                  initialMonth={summaryMonth}
+                  onMonthChange={(date) => setSummaryMonth(date)}
                   onSelectDate={(date) => {
                     if (selectedDate && isSameDay(date, selectedDate)) {
                       setSelectedDate(null);
