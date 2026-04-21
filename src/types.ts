@@ -1,4 +1,6 @@
 export type TransactionType = 'income' | 'expense';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type ViewMode = 'calendar' | 'summary';
 
 export interface UserProfile {
   uid: string;
@@ -19,6 +21,14 @@ export interface Transaction {
   groupId: string;
   createdAt: Date;
   updatedAt: Date;
+  
+  // New fields
+  isEstimate: boolean; // presunta vs certa
+  recurring: boolean;
+  frequency?: RecurrenceFrequency;
+  occurrenceCount?: number;
+  reminderEnabled: boolean;
+  parentTransactionId?: string; // linkage if generated from a recurrence
 }
 
 export interface FamilyGroup {

@@ -1,4 +1,4 @@
-import { Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import { Trash2, TrendingDown, TrendingUp, AlertCircle, Repeat } from 'lucide-react';
 import { Transaction } from '../types';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -22,24 +22,32 @@ export function TransactionList({ transactions, onDelete }: Props) {
       {transactions.map((t) => (
         <div
           key={t.id}
-          className="group flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all"
+          className={`group flex items-center justify-between p-4 bg-white rounded-xl border transition-all hover:shadow-sm ${
+            t.isEstimate ? 'border-amber-100 bg-amber-50/10' : 'border-gray-100'
+          }`}
         >
           <div className="flex items-center gap-4">
             <div className={`p-2 rounded-lg ${t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
               {t.type === 'income' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h4 className="font-semibold text-gray-900">{t.category}</h4>
-                {t.description && <span className="text-sm text-gray-400 font-normal">• {t.description}</span>}
+                {t.recurring && <Repeat size={14} className="text-blue-500" />}
+                {t.isEstimate && (
+                  <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
+                    Presunta
+                  </span>
+                )}
+                {t.description && <span className="text-sm text-gray-400 font-normal hidden sm:inline">• {t.description}</span>}
               </div>
               <p className="text-xs text-gray-400 uppercase tracking-tighter font-medium">
                 {format(t.date, 'dd MMMM yyyy', { locale: it })}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-6">
-            <span className={`font-mono font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-gray-900'}`}>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <span className={`font-mono font-bold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate ? 'text-amber-600' : 'text-gray-900')}`}>
               {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
             </span>
             <button

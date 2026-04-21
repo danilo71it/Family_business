@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Calendar, Tag, FileText } from 'lucide-react';
-import { TransactionType } from '../types';
+import { Plus, Minus, Calendar, Tag, FileText, Repeat, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { TransactionType, RecurrenceFrequency } from '../types';
 
 interface Props {
   onAdd: (t: {
@@ -10,6 +10,11 @@ interface Props {
     description: string;
     date: Date;
     userId: string;
+    isEstimate: boolean;
+    recurring: boolean;
+    frequency?: RecurrenceFrequency;
+    occurrenceCount?: number;
+    reminderEnabled: boolean;
   }) => Promise<void>;
   userId: string;
 }
@@ -24,22 +29,38 @@ export function TransactionForm({ onAdd, userId }: Props) {
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // New states
+  const [isEstimate, setIsEstimate] = useState(false);
+  const [recurring, setRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly');
+  const [occurrenceCount, setOccurrenceCount] = useState('1');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || isNaN(parseFloat(amount))) return;
+    const parsedAmount = parseFloat(amount || '0');
+    if (!isEstimate && (!amount || isNaN(parsedAmount))) return;
 
     await onAdd({
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       type,
       category,
       description,
       date: new Date(date),
       userId,
+      isEstimate,
+      recurring,
+      frequency: recurring ? frequency : undefined,
+      occurrenceCount: recurring ? parseInt(occurrenceCount) : undefined,
+      reminderEnabled,
     });
 
     setAmount('');
     setDescription('');
+    setRecurring(false);
+    setIsEstimate(false);
+    setReminderEnabled(false);
   };
 
   return (
@@ -78,8 +99,9 @@ export function TransactionForm({ onAdd, userId }: Props) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg"
-              required
+              disabled={isEstimate && !amount}
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
+              required={!isEstimate}
             />
           </div>
         </div>
@@ -125,6 +147,71 @@ export function TransactionForm({ onAdd, userId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Advanced Toggles */}
+      <div className="flex flex-wrap gap-4 py-2 border-t border-gray-50 mt-2">
+        <button
+          type="button"
+          onClick={() => setIsEstimate(!isEstimate)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            isEstimate ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
+          }`}
+        >
+          {isEstimate ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+          {isEstimate ? 'Importo Presunto' : 'Importo Certo'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setRecurring(!recurring)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            recurring ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
+          }`}
+        >
+          <Repeat size={16} />
+          {recurring ? 'Ricorrente' : 'Singola'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setReminderEnabled(!reminderEnabled)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            reminderEnabled ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
+          }`}
+        >
+          <AlertCircle size={16} />
+          {reminderEnabled ? 'Alert attivo' : 'Senza Alert'}
+        </button>
+      </div>
+
+      {recurring && (
+        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl animate-in fade-in slide-in-from-top-2">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Frequenza</label>
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)}
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 appearance-none"
+            >
+              <option value="daily">Giornaliera</option>
+              <option value="weekly">Settimanale</option>
+              <option value="monthly">Mensile</option>
+              <option value="yearly">Annuale</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Ripetizioni</label>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              value={occurrenceCount}
+              onChange={(e) => setOccurrenceCount(e.target.value)}
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      )}
 
       <button
         type="submit"

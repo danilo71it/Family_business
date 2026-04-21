@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useFinance } from './hooks/useFinance';
 import { Auth } from './components/Auth';
 import { TransactionForm } from './components/TransactionForm';
 import { TransactionList } from './components/TransactionList';
 import { Stats } from './components/Stats';
-import { LogOut, Plus, Users, Wallet, Loader2 } from 'lucide-react';
+import { CalendarView } from './components/CalendarView';
+import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X } from 'lucide-react';
+import { ViewMode, Transaction } from './types';
+import { isAfter, isToday, addDays, format, isSameDay } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
   const { transactions, group, loading: financeLoading, addTransaction, deleteTransaction, createGroup } = useFinance(profile?.groupId || null);
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [groupName, setGroupName] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const alerts = useMemo(() => {
+    return transactions
+      .filter(t => t.reminderEnabled && (isAfter(t.date, new Date()) || isToday(t.date)))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 5);
+  }, [transactions]);
+
+  const filteredTransactionsByDate = useMemo(() => {
+    if (!selectedDate) return transactions;
+    return transactions.filter(t => isSameDay(t.date, selectedDate));
+  }, [transactions, selectedDate]);
 
   if (authLoading) {
     return (
@@ -30,7 +47,6 @@ export default function App() {
     if (!groupName.trim()) return;
     const gid = await createGroup(groupName, user.uid);
     await updateProfile({ groupId: gid });
-    setIsCreatingGroup(false);
   };
 
   if (!profile?.groupId) {
@@ -73,8 +89,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-gray-900 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-100">
               <Wallet size={24} />
@@ -86,17 +102,34 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 pr-4 border-r border-gray-100">
-              <div className="text-right">
-                <p className="text-xs font-bold text-gray-900 leading-none">{user.displayName}</p>
-                <p className="text-[10px] text-gray-400 font-medium uppercase">{profile.email}</p>
-              </div>
+            {/* View Toggle */}
+            <div className="bg-gray-100 p-1 rounded-xl flex gap-1">
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                  viewMode === 'calendar' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <CalendarIcon size={16} />
+                Calendario
+              </button>
+              <button
+                onClick={() => setViewMode('summary')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                  viewMode === 'summary' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <LayoutGrid size={16} />
+                Riepilogo
+              </button>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 pr-4 border-r border-gray-100 ml-2">
               <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-gray-100" referrerPolicy="no-referrer" alt="" />
             </div>
             <button
               onClick={logout}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-              title="Esci"
             >
               <LogOut size={20} />
             </button>
@@ -104,49 +137,79 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto p-6 space-y-8">
-        {/* Statistics Row */}
-        <Stats transactions={transactions} />
+      <main className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Alerts Section (if any) */}
+        {alerts.length > 0 && (
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-4 overflow-x-auto no-scrollbar">
+            <div className="p-3 bg-white rounded-xl shadow-sm text-amber-500 h-fit">
+              <Bell size={20} />
+            </div>
+            <div className="flex gap-4">
+              {alerts.map(alert => (
+                <div key={alert.id} className="min-w-[200px] bg-white/50 p-3 rounded-xl border border-white/50">
+                  <p className="text-[10px] font-black uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
+                  <p className="text-sm font-bold text-gray-900 truncate">{alert.category}</p>
+                  <p className="text-xs font-mono font-bold text-gray-500">
+                    {alert.amount === 0 ? 'Da definire' : alert.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Form */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-gray-100">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Nuova Voce</h2>
+        {viewMode === 'summary' ? (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <Stats transactions={transactions} />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-5">
+                <TransactionForm onAdd={addTransaction} userId={user.uid} />
               </div>
-              <div className="p-6">
-                <TransactionForm 
-                  onAdd={addTransaction} 
-                  userId={user.uid} 
+              <div className="lg:col-span-7 space-y-6">
+                <h2 className="text-lg font-black text-gray-900 tracking-tight">Registro Transazioni</h2>
+                <TransactionList transactions={transactions} onDelete={deleteTransaction} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8">
+                <CalendarView 
+                  transactions={transactions} 
+                  onSelectDate={(date) => setSelectedDate(isSameDay(date, selectedDate || new Date(0)) ? null : date)} 
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Right Column: List */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black text-gray-900 tracking-tight">Ultime Transazioni</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
-                  {transactions.length} TOT
-                </span>
+              <div className="lg:col-span-4 space-y-6">
+                <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+                   <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                        {selectedDate ? `Spese del ${format(selectedDate, 'dd MMMM', { locale: it })}` : 'Nuova Transazione'}
+                      </h2>
+                      {selectedDate && (
+                        <button onClick={() => setSelectedDate(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+                          <X size={16} />
+                        </button>
+                      )}
+                   </div>
+                   {selectedDate ? (
+                     <div className="space-y-4">
+                        <TransactionList transactions={filteredTransactionsByDate} onDelete={deleteTransaction} />
+                        <button 
+                          onClick={() => setSelectedDate(null)}
+                          className="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-xl text-sm"
+                        >
+                          + Aggiungi per oggi
+                        </button>
+                     </div>
+                   ) : (
+                     <TransactionForm onAdd={addTransaction} userId={user.uid} />
+                   )}
+                </div>
               </div>
             </div>
-
-            {financeLoading ? (
-              <div className="flex justify-center py-20">
-                <Loader2 className="animate-spin text-blue-200" size={32} />
-              </div>
-            ) : (
-              <TransactionList 
-                transactions={transactions} 
-                onDelete={deleteTransaction} 
-              />
-            )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

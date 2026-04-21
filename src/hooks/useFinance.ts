@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { 
   collection, query, where, orderBy, onSnapshot, 
-  addDoc, updateDoc, deleteDoc, doc, serverTimestamp, 
-  Timestamp, CollectionReference, setDoc, getDocs
+  addDoc, deleteDoc, doc, serverTimestamp, 
+  Timestamp, setDoc
 } from 'firebase/firestore';
-import { Transaction, FamilyGroup, TransactionType } from '../types';
+import { Transaction, FamilyGroup, TransactionType, RecurrenceFrequency } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
+import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
 export function useFinance(groupId: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -23,7 +24,6 @@ export function useFinance(groupId: string | null) {
 
     setLoading(true);
 
-    // Group listener
     const groupRef = doc(db, 'groups', groupId);
     const unsubGroup = onSnapshot(groupRef, (doc) => {
       if (doc.exists()) {
@@ -31,7 +31,6 @@ export function useFinance(groupId: string | null) {
       }
     }, (err) => handleFirestoreError(err, 'get', `groups/${groupId}`));
 
-    // Transactions listener
     const transactionsRef = collection(db, 'groups', groupId, 'transactions');
     const q = query(transactionsRef, orderBy('date', 'desc'));
     
@@ -56,16 +55,57 @@ export function useFinance(groupId: string | null) {
     };
   }, [groupId]);
 
-  const addTransaction = async (t: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'groupId'>) => {
+  const addTransaction = async (t: {
+    amount: number;
+    type: TransactionType;
+    category: string;
+    description: string;
+    date: Date;
+    userId: string;
+    isEstimate: boolean;
+    recurring: boolean;
+    frequency?: RecurrenceFrequency;
+    occurrenceCount?: number;
+    reminderEnabled: boolean;
+  }) => {
     if (!groupId) return;
     try {
       const transactionsRef = collection(db, 'groups', groupId, 'transactions');
-      await addDoc(transactionsRef, {
-        ...t,
-        groupId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      
+      const count = t.recurring ? (t.occurrenceCount || 1) : 1;
+      const parentId = t.recurring ? doc(transactionsRef).id : undefined;
+
+      for (let i = 0; i < count; i++) {
+        let occurrenceDate = new Date(t.date);
+        if (t.recurring && i > 0) {
+          if (t.frequency === 'daily') occurrenceDate = addDays(t.date, i);
+          else if (t.frequency === 'weekly') occurrenceDate = addWeeks(t.date, i);
+          else if (t.frequency === 'monthly') occurrenceDate = addMonths(t.date, i);
+          else if (t.frequency === 'yearly') occurrenceDate = addYears(t.date, i);
+        }
+
+        const data: any = {
+          ...t,
+          date: occurrenceDate,
+          groupId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        if (t.recurring) {
+          data.parentTransactionId = parentId;
+        }
+
+        // Se è una ricorrenza futura di un'assicurazione (o altro "presunto"), 
+        // l'importo per le occorrenze future potrebbe essere resettato a 0 se è l'utente a volerlo,
+        // ma qui seguiamo la logica: se è "presunto", teniamo l'importo attuale o 0 se specificato.
+        // L'utente ha chiesto: "mi crea una voce... tra un anno, ma senza il costo".
+        if (i > 0 && t.isEstimate) {
+           data.amount = 0;
+        }
+
+        await addDoc(transactionsRef, data);
+      }
     } catch (err) {
       handleFirestoreError(err, 'create', `groups/${groupId}/transactions`);
     }
