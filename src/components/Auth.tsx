@@ -13,7 +13,7 @@ export function Auth({ onLogin }: Props) {
             <Wallet size={48} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">FamigliAffari</h1>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Family business</h1>
             <p className="text-gray-500 font-medium">Gestione finanziaria semplice per tutta la famiglia</p>
           </div>
         </div>

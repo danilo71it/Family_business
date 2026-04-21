@@ -80,7 +80,7 @@ export default function App() {
               <Wallet size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight leading-none">FamigliAffari</h1>
+              <h1 className="text-xl font-black tracking-tight leading-none">Family business</h1>
               <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{group?.name}</span>
             </div>
           </div>
