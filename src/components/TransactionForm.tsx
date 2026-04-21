@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Calendar, Tag, FileText, Repeat, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { TransactionType, RecurrenceFrequency } from '../types';
+import { format } from 'date-fns';
 
 interface Props {
   onAdd: (t: {
@@ -29,15 +30,15 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
   const [type, setType] = useState<TransactionType>('expense');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   
   // Update date if defaultDate changes
   useEffect(() => {
     if (defaultDate) {
-      setDate(defaultDate.toISOString().split('T')[0]);
+      setDate(format(defaultDate, 'yyyy-MM-dd'));
     }
   }, [defaultDate]);
-  
+
   // New states
   const [isEstimate, setIsEstimate] = useState(false);
   const [recurring, setRecurring] = useState(false);
@@ -50,12 +51,16 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
     const parsedAmount = parseFloat(amount || '0');
     if (!isEstimate && (!amount || isNaN(parsedAmount))) return;
 
+    // Create date and set to noon local to avoid timezone shifting
+    const selectedDate = new Date(date);
+    selectedDate.setHours(12, 0, 0, 0);
+
     await onAdd({
       amount: parsedAmount,
       type,
       category,
-      description,
-      date: new Date(date),
+      description: description || '',
+      date: selectedDate,
       userId,
       isEstimate,
       recurring,

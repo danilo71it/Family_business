@@ -57,25 +57,25 @@ service cloud.firestore {
         function isValidTransaction(data) {
           return data.amount is number &&
                  data.type in ['income', 'expense'] &&
-                 data.category is string && data.category.size() <= 50 &&
-                 data.description is string && data.description.size() <= 1000 &&
+                 data.category is string && data.category.size() <= 100 &&
                  data.date is timestamp &&
                  data.userId == request.auth.uid &&
                  data.groupId == groupId &&
-                 data.createdAt == request.time &&
-                 data.updatedAt == request.time &&
                  data.isEstimate is bool &&
                  data.recurring is bool &&
-                 data.reminderEnabled is bool &&
-                 (!data.recurring || (data.frequency in ['daily', 'weekly', 'monthly', 'yearly'] && data.occurrenceCount is number)) &&
-                 (!('parentTransactionId' in data) || (data.parentTransactionId is string && data.parentTransactionId.size() <= 128));
+                 data.reminderEnabled is bool;
         }
 
-        allow list: if isGroupMember(groupId) && resource.data.groupId == groupId;
+        allow list: if isGroupMember(groupId);
         allow get: if isGroupMember(groupId);
-        allow create: if isGroupMember(groupId) && isValidId(transactionId) && isValidTransaction(incoming());
-        allow update: if isGroupMember(groupId) && incoming().userId == existing().userId &&
-                      isValidTransaction(incoming()) && incoming().createdAt == existing().createdAt &&
+        allow create: if isGroupMember(groupId) && 
+                      isValidTransaction(incoming()) && 
+                      incoming().createdAt == request.time && 
+                      incoming().updatedAt == request.time;
+        allow update: if isGroupMember(groupId) && 
+                      incoming().userId == existing().userId &&
+                      isValidTransaction(incoming()) &&
+                      incoming().createdAt == existing().createdAt &&
                       incoming().updatedAt == request.time &&
                       incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'type', 'category', 'description', 'date', 'updatedAt', 'isEstimate', 'recurring', 'frequency', 'occurrenceCount', 'reminderEnabled', 'parentTransactionId']);
         allow delete: if isGroupMember(groupId) && (request.auth.uid == existing().userId || get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == request.auth.uid);
