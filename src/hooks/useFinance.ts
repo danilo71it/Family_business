@@ -72,7 +72,12 @@ export function useFinance(groupId: string | null) {
     try {
       const transactionsRef = collection(db, 'groups', groupId, 'transactions');
       
-      const count = t.recurring ? (t.occurrenceCount || 1) : 1;
+      const INFINITE_LIMIT = 60; // 5 years limit for "infinite" recurring to avoid browser hang
+      let count = t.recurring ? (t.occurrenceCount || 1) : 1;
+      if (t.recurring && (!t.occurrenceCount || t.occurrenceCount > INFINITE_LIMIT)) {
+        count = INFINITE_LIMIT;
+      }
+      
       const parentId = t.recurring ? doc(transactionsRef).id : undefined;
 
       for (let i = 0; i < count; i++) {
@@ -92,7 +97,7 @@ export function useFinance(groupId: string | null) {
           date: Timestamp.fromDate(occurrenceDate),
           userId: t.userId,
           groupId,
-          isEstimate: t.isEstimate,
+          isEstimate: i === 0 ? false : t.isEstimate, // First is always certain if user wants, others follow estimate flag
           recurring: t.recurring,
           reminderEnabled: t.reminderEnabled,
           createdAt: serverTimestamp(),

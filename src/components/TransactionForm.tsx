@@ -41,6 +41,7 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
   // New states
   const [isEstimate, setIsEstimate] = useState(false);
   const [recurring, setRecurring] = useState(false);
+  const [isInfinite, setIsInfinite] = useState(false);
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly');
   const [occurrenceCount, setOccurrenceCount] = useState('1');
   const [reminderEnabled, setReminderEnabled] = useState(false);
@@ -65,13 +66,14 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
       isEstimate,
       recurring,
       frequency: recurring ? frequency : undefined,
-      occurrenceCount: recurring ? parseInt(occurrenceCount) : undefined,
+      occurrenceCount: recurring ? (isInfinite ? 60 : parseInt(occurrenceCount)) : undefined,
       reminderEnabled,
     });
 
     setAmount('');
     setCategory('');
     setRecurring(false);
+    setIsInfinite(false);
     setIsEstimate(false);
     setReminderEnabled(false);
   };
@@ -187,31 +189,45 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
       </div>
 
       {recurring && (
-        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl animate-in fade-in slide-in-from-top-2">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Frequenza</label>
-            <select
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)}
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 appearance-none"
-            >
-              <option value="daily">Giornaliera</option>
-              <option value="weekly">Settimanale</option>
-              <option value="monthly">Mensile</option>
-              <option value="yearly">Annuale</option>
-            </select>
+        <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl animate-in fade-in slide-in-from-top-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Frequenza</label>
+              <select
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)}
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 appearance-none"
+              >
+                <option value="daily">Giornaliera</option>
+                <option value="weekly">Settimanale</option>
+                <option value="monthly">Mensile</option>
+                <option value="yearly">Annuale</option>
+              </select>
+            </div>
+            {!isInfinite && (
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Conteggio</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={occurrenceCount}
+                  onChange={(e) => setOccurrenceCount(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Ripetizioni</label>
-            <input
-              type="number"
-              min="1"
-              max="120"
-              value={occurrenceCount}
-              onChange={(e) => setOccurrenceCount(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsInfinite(!isInfinite)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all w-fit ${
+              isInfinite ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-blue-300'
+            }`}
+          >
+            {isInfinite ? <Repeat size={14} /> : <Plus size={14} />}
+            {isInfinite ? 'Ripeti per sempre (max 5 anni)' : 'Imposta come infinito'}
+          </button>
         </div>
       )}
 
