@@ -1,0 +1,6 @@
+{
+  "name": "Family business",
+  "description": "Un'app moderna per la gestione finanziaria della famiglia, con tracciamento di entrate e uscite, grafici e sincronizzazione tra dispositivi via Google Login.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
