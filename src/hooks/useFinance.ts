@@ -85,23 +85,24 @@ export function useFinance(groupId: string | null) {
         }
 
         const data: any = {
-          ...t,
+          amount: (i > 0 && t.isEstimate) ? 0 : t.amount,
+          type: t.type,
+          category: t.category,
+          description: t.description,
           date: occurrenceDate,
+          userId: t.userId,
           groupId,
+          isEstimate: t.isEstimate,
+          recurring: t.recurring,
+          reminderEnabled: t.reminderEnabled,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
 
         if (t.recurring) {
+          data.frequency = t.frequency;
+          data.occurrenceCount = t.occurrenceCount;
           data.parentTransactionId = parentId;
-        }
-
-        // Se è una ricorrenza futura di un'assicurazione (o altro "presunto"), 
-        // l'importo per le occorrenze future potrebbe essere resettato a 0 se è l'utente a volerlo,
-        // ma qui seguiamo la logica: se è "presunto", teniamo l'importo attuale o 0 se specificato.
-        // L'utente ha chiesto: "mi crea una voce... tra un anno, ma senza il costo".
-        if (i > 0 && t.isEstimate) {
-           data.amount = 0;
         }
 
         await addDoc(transactionsRef, data);

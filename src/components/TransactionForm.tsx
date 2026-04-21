@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Calendar, Tag, FileText, Repeat, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { TransactionType, RecurrenceFrequency } from '../types';
 
@@ -17,18 +17,26 @@ interface Props {
     reminderEnabled: boolean;
   }) => Promise<void>;
   userId: string;
+  defaultDate?: Date | null;
 }
 
 const CATEGORIES = [
   'Cibo', 'Casa', 'Trasporti', 'Svago', 'Salute', 'Istruzione', 'Stipendio', 'Regalo', 'Altro'
 ];
 
-export function TransactionForm({ onAdd, userId }: Props) {
+export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Update date if defaultDate changes
+  useEffect(() => {
+    if (defaultDate) {
+      setDate(defaultDate.toISOString().split('T')[0]);
+    }
+  }, [defaultDate]);
   
   // New states
   const [isEstimate, setIsEstimate] = useState(false);

@@ -17,6 +17,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isAddingTransaction, setIsAddingTransaction] = useState(false);
 
   const alerts = useMemo(() => {
     return transactions
@@ -177,36 +178,64 @@ export default function App() {
               <div className="lg:col-span-8">
                 <CalendarView 
                   transactions={transactions} 
-                  onSelectDate={(date) => setSelectedDate(isSameDay(date, selectedDate || new Date(0)) ? null : date)} 
+                  onSelectDate={(date) => {
+                    if (selectedDate && isSameDay(date, selectedDate)) {
+                      setSelectedDate(null);
+                      setIsAddingTransaction(false);
+                    } else {
+                      setSelectedDate(date);
+                      const dayTransactions = transactions.filter(t => isSameDay(t.date, date));
+                      setIsAddingTransaction(dayTransactions.length === 0);
+                    }
+                  }} 
                 />
               </div>
-              <div className="lg:col-span-4 space-y-6">
-                <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
-                   <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                        {selectedDate ? `Spese del ${format(selectedDate, 'dd MMMM', { locale: it })}` : 'Nuova Transazione'}
-                      </h2>
-                      {selectedDate && (
-                        <button onClick={() => setSelectedDate(null)} className="p-1 hover:bg-gray-100 rounded-lg">
-                          <X size={16} />
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+               <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                    {selectedDate ? (isAddingTransaction ? `Nuova Voce - ${format(selectedDate, 'dd MMM', { locale: it })}` : `Registro - ${format(selectedDate, 'dd MMM', { locale: it })}`) : 'Nuova Transazione'}
+                  </h2>
+                  {selectedDate && (
+                    <button 
+                      onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); }} 
+                      className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+               </div>
+               
+               {selectedDate ? (
+                 <div className="space-y-4">
+                    {isAddingTransaction ? (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                        <TransactionForm onAdd={async (t) => { await addTransaction(t); setIsAddingTransaction(false); }} userId={user.uid} defaultDate={selectedDate} />
+                        <button 
+                          onClick={() => setIsAddingTransaction(false)}
+                          className="w-full py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all"
+                        >
+                          Annulla
                         </button>
-                      )}
-                   </div>
-                   {selectedDate ? (
-                     <div className="space-y-4">
+                      </div>
+                    ) : (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
                         <TransactionList transactions={filteredTransactionsByDate} onDelete={deleteTransaction} />
                         <button 
-                          onClick={() => setSelectedDate(null)}
-                          className="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-xl text-sm"
+                          onClick={() => setIsAddingTransaction(true)}
+                          className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 active:scale-95"
                         >
-                          + Aggiungi per oggi
+                          <Plus size={18} />
+                          Aggiungi per il {format(selectedDate, 'd MMM', { locale: it })}
                         </button>
-                     </div>
-                   ) : (
-                     <TransactionForm onAdd={addTransaction} userId={user.uid} />
-                   )}
-                </div>
-              </div>
+                      </div>
+                    )}
+                 </div>
+               ) : (
+                 <TransactionForm onAdd={addTransaction} userId={user.uid} />
+               )}
+            </div>
+          </div>
             </div>
           </div>
         )}

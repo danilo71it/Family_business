@@ -27,9 +27,15 @@
         "userId": { "type": "string" },
         "groupId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "isEstimate": { "type": "boolean" },
+        "recurring": { "type": "boolean" },
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
+        "occurrenceCount": { "type": "number" },
+        "reminderEnabled": { "type": "boolean" },
+        "parentTransactionId": { "type": "string" }
       },
-      "required": ["amount", "type", "category", "date", "userId", "groupId"]
+      "required": ["amount", "type", "category", "date", "userId", "groupId", "isEstimate", "recurring", "reminderEnabled"]
     },
     "FamilyGroup": {
       "title": "FamilyGroup",
