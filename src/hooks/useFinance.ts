@@ -142,6 +142,20 @@ export function useFinance(groupId: string | null) {
     }
   };
 
+  const deleteTransactionSeries = async (parentTransactionId: string) => {
+    if (!groupId || !parentTransactionId) return;
+    try {
+      const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+      const q = query(transactionsRef, where('parentTransactionId', '==', parentTransactionId));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    } catch (err) {
+      handleFirestoreError(err, 'delete', `groups/${groupId}/transactions/series/${parentTransactionId}`);
+    }
+  };
+
   const updateTransaction = async (id: string, updates: any) => {
     if (!groupId) return;
     try {
@@ -262,6 +276,7 @@ export function useFinance(groupId: string | null) {
   return { 
     transactions, group, loading, 
     addTransaction, deleteTransaction, updateTransaction, 
+    deleteTransactionSeries,
     resetMonthTransactions, resetAllTransactions,
     createGroup 
   };

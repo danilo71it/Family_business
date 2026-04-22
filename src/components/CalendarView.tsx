@@ -89,9 +89,9 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
           const expense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
           const isCurrentMonth = isSameMonth(day, monthStart);
 
-          // Get variables/estimates
-          const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate);
-          const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate);
+          // Get variables/estimates or privacy items or unknown amounts
+          const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount);
+          const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount);
           
           const incomeSum = otherTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
           const expenseSum = otherTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);

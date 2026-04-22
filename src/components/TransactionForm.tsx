@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell } from 'lucide-react';
+import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2 } from 'lucide-react';
 import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
 
 interface Props {
   onAdd: (t: any) => Promise<void>;
   onUpdate?: (id: string, t: any) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
+  onDeleteSeries?: (parentTransactionId: string) => Promise<void>;
   userId: string;
   defaultDate?: Date | null;
   initialData?: Transaction | null;
 }
 
-export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialData }: Props) {
+export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, userId, defaultDate, initialData }: Props) {
   const [amount, setAmount] = useState(initialData?.amount.toString() || '');
   const [type, setType] = useState<TransactionType>(initialData?.type || 'expense');
   const [category, setCategory] = useState(initialData?.category || '');
@@ -47,11 +49,44 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
   const [isPrivacyActive, setIsPrivacyActive] = useState(false);
   const [isUnknownAmount, setIsUnknownAmount] = useState(false);
 
+  const handleDelete = async () => {
+    if (!initialData || !onDelete) return;
+
+    if (initialData.recurring && initialData.parentTransactionId) {
+      if (window.confirm('Questa è una transazione ricorrente. Vuoi cancellare l\'intera serie (passata e futura) o solo questa singola occorrenza? Clicca OK per cancellare TUTTA LA SERIE, Annulla per cancellare SOLO QUESTA.')) {
+        if (onDeleteSeries) {
+          await onDeleteSeries(initialData.parentTransactionId);
+        } else {
+          await onDelete(initialData.id);
+        }
+      } else {
+        if (window.confirm('Confermi di voler cancellare questa singola occorrenza?')) {
+          await onDelete(initialData.id);
+        }
+      }
+    } else {
+      if (window.confirm('Confermi di voler cancellare questa transazione?')) {
+        await onDelete(initialData.id);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!category.trim()) return;
-    const parsedAmount = isUnknownAmount ? 0 : parseFloat(amount || '0');
-    if (!isEstimate && !isUnknownAmount && (!amount || isNaN(parsedAmount))) return;
+    
+    // Handle amount parsing more robustly
+    let parsedAmount = 0;
+    if (!isUnknownAmount) {
+      parsedAmount = parseFloat(amount.replace(',', '.'));
+      if (isNaN(parsedAmount)) parsedAmount = 0;
+    }
+
+    if (!isEstimate && !isUnknownAmount && parsedAmount <= 0 && amount !== '0') {
+      // If it's a "certain" transaction (not variable/unknown), it must have an amount > 0
+      // unless specifically '0' was intended (rare for expenses but possible)
+      if (!amount || isNaN(parsedAmount)) return;
+    }
 
     const selectedDate = new Date(date);
     selectedDate.setHours(12, 0, 0, 0);
@@ -159,7 +194,6 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
                 placeholder={isUnknownAmount ? "SCONOSCIUTO" : "0.00"}
                 disabled={(recurring && isEstimate && !amount) || isUnknownAmount}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
-                required={!(recurring && isEstimate) && !isUnknownAmount}
               />
             </div>
           </div>
@@ -307,14 +341,27 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
         </div>
       )}
 
-      <button
-        type="submit"
-        className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] ${
-          type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
-        }`}
-      >
-        {initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita')}
-      </button>
+      <div className="flex gap-4">
+        <button
+          type="submit"
+          className={`flex-1 py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] ${
+            type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
+          }`}
+        >
+          {initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita')}
+        </button>
+        
+        {initialData && onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="px-4 py-4 bg-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-gray-100"
+            title="Elimina"
+          >
+            <Trash2 size={24} />
+          </button>
+        )}
+      </div>
     </form>
   );
 }

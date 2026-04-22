@@ -15,7 +15,7 @@ export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
   const { 
     transactions, group, loading: financeLoading, 
-    addTransaction, deleteTransaction, updateTransaction, 
+    addTransaction, deleteTransaction, deleteTransactionSeries, updateTransaction, 
     resetMonthTransactions, resetAllTransactions, createGroup 
   } = useFinance(profile?.groupId || null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
@@ -338,6 +338,8 @@ export default function App() {
                    <TransactionForm 
                      onAdd={async (t) => { await addTransaction(t); setEditingTransaction(null); }} 
                      onUpdate={async (id, t) => { await updateTransaction(id, t); setEditingTransaction(null); }}
+                     onDelete={async (id) => { await deleteTransaction(id); setEditingTransaction(null); }}
+                     onDeleteSeries={async (pid) => { await deleteTransactionSeries(pid); setEditingTransaction(null); }}
                      userId={user.uid} 
                      initialData={editingTransaction} 
                    />
