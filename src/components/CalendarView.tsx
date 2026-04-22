@@ -11,11 +11,12 @@ import { Transaction } from '../types';
 interface Props {
   transactions: Transaction[];
   onSelectDate: (date: Date) => void;
+  onEditTransaction?: (transaction: Transaction) => void;
   onMonthChange?: (date: Date) => void;
   initialMonth?: Date;
 }
 
-export function CalendarView({ transactions, onSelectDate, onMonthChange, initialMonth }: Props) {
+export function CalendarView({ transactions, onSelectDate, onEditTransaction, onMonthChange, initialMonth }: Props) {
   const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
 
   const monthStart = startOfMonth(currentMonth);
@@ -112,7 +113,11 @@ export function CalendarView({ transactions, onSelectDate, onMonthChange, initia
                 {estimates.map(t => (
                   <div 
                     key={t.id} 
-                    className={`text-[10px] font-black truncate px-1.5 py-0.5 rounded ${
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditTransaction?.(t);
+                    }}
+                    className={`text-[10px] font-black truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 ${
                       t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}
                     title={t.category}
@@ -121,30 +126,47 @@ export function CalendarView({ transactions, onSelectDate, onMonthChange, initia
                   </div>
                 ))}
 
-                {/* Show sums ONLY if there are no estimates or for the remaining transactions? 
-                    User says "invece che il prezzo", so I'll hide the sums if estimates are present 
-                    or show sums only for non-estimates. Actually, user's request is specific to presumed.
-                */}
+                {/* Show sums ONLY if there are no estimates or for the remaining transactions? */}
                 {estimates.length === 0 && (
-                  <>
-                    {income > 0 && (
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                  <div className="space-y-0.5">
+                    {dayTransactions.filter(t => t.type === 'income').length > 0 && (
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Find first income transaction to edit or prioritize list
+                          const firstIncome = dayTransactions.find(t => t.type === 'income');
+                          if (firstIncome) onEditTransaction?.(firstIncome);
+                        }}
+                        className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded hover:bg-green-100 transition-colors"
+                      >
                         <TrendingUp size={10} />
                         {income.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                       </div>
                     )}
-                    {expense > 0 && (
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                    {dayTransactions.filter(t => t.type === 'expense').length > 0 && (
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const firstExpense = dayTransactions.find(t => t.type === 'expense');
+                          if (firstExpense) onEditTransaction?.(firstExpense);
+                        }}
+                        className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded hover:bg-red-100 transition-colors"
+                      >
                         <TrendingDown size={10} />
                         {expense.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
                 
                 {/* Visual indicator for alerts */}
                 <div className="flex gap-1 mt-1">
-                  {dayTransactions.some(t => t.reminderEnabled) && <div className="w-1.5 h-1.5 rounded-full bg-purple-400" title="Contiene alert" />}
+                  {dayTransactions.some(t => t.reminderEnabled) && (
+                    <div 
+                      className="w-1.5 h-1.5 rounded-full bg-purple-400" 
+                      title="Contiene alert" 
+                    />
+                  )}
                 </div>
               </div>
             </div>

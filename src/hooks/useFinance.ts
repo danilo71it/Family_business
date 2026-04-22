@@ -142,5 +142,22 @@ export function useFinance(groupId: string | null) {
     }
   };
 
-  return { transactions, group, loading, addTransaction, deleteTransaction, createGroup };
+  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+    if (!groupId) return;
+    try {
+      const docRef = doc(db, 'groups', groupId, 'transactions', id);
+      const dataToSave: any = { ...updates, updatedAt: serverTimestamp() };
+      
+      // Handle date conversion if present
+      if (updates.date) {
+        dataToSave.date = Timestamp.fromDate(updates.date);
+      }
+      
+      await setDoc(docRef, dataToSave, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, 'update', `groups/${groupId}/transactions/${id}`);
+    }
+  };
+
+  return { transactions, group, loading, addTransaction, deleteTransaction, updateTransaction, createGroup };
 }

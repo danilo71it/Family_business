@@ -1,50 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Calendar, Tag, FileText, Repeat, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { TransactionType, RecurrenceFrequency } from '../types';
+import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell } from 'lucide-react';
+import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
 
 interface Props {
-  onAdd: (t: {
-    amount: number;
-    type: TransactionType;
-    category: string;
-    description: string;
-    date: Date;
-    userId: string;
-    isEstimate: boolean;
-    recurring: boolean;
-    frequency?: RecurrenceFrequency;
-    occurrenceCount?: number;
-    reminderEnabled: boolean;
-  }) => Promise<void>;
+  onAdd: (t: any) => Promise<void>;
+  onUpdate?: (id: string, t: any) => Promise<void>;
   userId: string;
   defaultDate?: Date | null;
+  initialData?: Transaction | null;
 }
 
-const CATEGORIES = [
-  'Cibo', 'Casa', 'Trasporti', 'Svago', 'Salute', 'Istruzione', 'Stipendio', 'Regalo', 'Altro'
-];
-
-export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>('expense');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialData }: Props) {
+  const [amount, setAmount] = useState(initialData?.amount.toString() || '');
+  const [type, setType] = useState<TransactionType>(initialData?.type || 'expense');
+  const [category, setCategory] = useState(initialData?.category || '');
+  const [date, setDate] = useState(initialData ? format(initialData.date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
   
-  // Update date if defaultDate changes
+  // Update state when initialData or defaultDate changes
   useEffect(() => {
-    if (defaultDate) {
+    if (initialData) {
+      setAmount(initialData.amount.toString());
+      setType(initialData.type);
+      setCategory(initialData.category);
+      setDate(format(initialData.date, 'yyyy-MM-dd'));
+      setIsEstimate(initialData.isEstimate || false);
+      setRecurring(initialData.recurring || false);
+      setFrequency(initialData.frequency || 'monthly');
+      setOccurrenceCount(initialData.occurrenceCount?.toString() || '1');
+      setReminderEnabled(initialData.reminderEnabled ?? true);
+      setIsInfinite(initialData.occurrenceCount === 60);
+    } else if (defaultDate) {
       setDate(format(defaultDate, 'yyyy-MM-dd'));
     }
-  }, [defaultDate]);
+  }, [defaultDate, initialData]);
 
-  // New states
+  // States
   const [isEstimate, setIsEstimate] = useState(false);
   const [recurring, setRecurring] = useState(false);
   const [isInfinite, setIsInfinite] = useState(false);
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly');
   const [occurrenceCount, setOccurrenceCount] = useState('1');
-  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,34 +49,41 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
     const parsedAmount = parseFloat(amount || '0');
     if (!isEstimate && (!amount || isNaN(parsedAmount))) return;
 
-    // Create date and set to noon local to avoid timezone shifting
     const selectedDate = new Date(date);
     selectedDate.setHours(12, 0, 0, 0);
 
-    await onAdd({
+    const data = {
       amount: parsedAmount,
       type,
       category: category.trim(),
       description: '',
       date: selectedDate,
       userId,
-      isEstimate,
+      isEstimate: recurring ? isEstimate : false,
       recurring,
       frequency: recurring ? frequency : undefined,
       occurrenceCount: recurring ? (isInfinite ? 60 : parseInt(occurrenceCount)) : undefined,
       reminderEnabled,
-    });
+    };
 
-    setAmount('');
-    setCategory('');
-    setRecurring(false);
-    setIsInfinite(false);
-    setIsEstimate(false);
-    setReminderEnabled(false);
+    if (initialData && onUpdate) {
+      await onUpdate(initialData.id, data);
+    } else {
+      await onAdd(data);
+    }
+
+    if (!initialData) {
+      setAmount('');
+      setCategory('');
+      setRecurring(false);
+      setIsInfinite(false);
+      setIsEstimate(false);
+      setReminderEnabled(true);
+    }
   };
 
   return (
-    <form id="transaction-form" onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
+    <form id={initialData ? "edit-transaction-form" : "transaction-form"} onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
       <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
         <button
           type="button"
@@ -130,9 +134,9 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                disabled={isEstimate && !amount}
+                disabled={recurring && isEstimate && !amount}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
-                required={!isEstimate}
+                required={!(recurring && isEstimate)}
               />
             </div>
           </div>
@@ -152,40 +156,46 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
         </div>
       </div>
 
-      {/* Advanced Toggles */}
-      <div className="flex flex-wrap gap-4 py-2 border-t border-gray-50 mt-2">
-        <button
-          type="button"
-          onClick={() => setIsEstimate(!isEstimate)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-            isEstimate ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
-          }`}
-        >
-          {isEstimate ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
-          {isEstimate ? 'Importo Presunto' : 'Importo Certo'}
-        </button>
+      <div className="space-y-4 pt-2 border-t border-gray-50">
+        <div className="flex flex-wrap gap-2">
+          {/* Recurring Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setRecurring(!recurring)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+              recurring ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            <Repeat size={14} />
+            Transazione Ricorrente
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setRecurring(!recurring)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-            recurring ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
-          }`}
-        >
-          <Repeat size={16} />
-          {recurring ? 'Ricorrente' : 'Singola'}
-        </button>
+          {/* Conditional Estimate Toggle Button - Only shown if recurring is ON */}
+          {recurring && (
+            <button
+              type="button"
+              onClick={() => setIsEstimate(!isEstimate)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
+                isEstimate ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+              }`}
+            >
+              <AlertCircle size={14} />
+              Importo Variabile
+            </button>
+          )}
 
-        <button
-          type="button"
-          onClick={() => setReminderEnabled(!reminderEnabled)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-            reminderEnabled ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100'
-          }`}
-        >
-          <AlertCircle size={16} />
-          {reminderEnabled ? 'Alert attivo' : 'Senza Alert'}
-        </button>
+          {/* Alert Toggle Button - Defaulted to ON */}
+          <button
+            type="button"
+            onClick={() => setReminderEnabled(!reminderEnabled)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+              reminderEnabled ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            <Bell size={14} />
+            Alert
+          </button>
+        </div>
       </div>
 
       {recurring && (
@@ -233,9 +243,11 @@ export function TransactionForm({ onAdd, userId, defaultDate }: Props) {
 
       <button
         type="submit"
-        className="mt-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-md active:scale-[0.98]"
+        className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] ${
+          type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
+        }`}
       >
-        Aggiungi Transazione
+        {initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita')}
       </button>
     </form>
   );

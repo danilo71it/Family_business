@@ -6,9 +6,10 @@ import { it } from 'date-fns/locale';
 interface Props {
   transactions: Transaction[];
   onDelete: (id: string) => Promise<void>;
+  onEdit?: (transaction: Transaction) => void;
 }
 
-export function TransactionList({ transactions, onDelete }: Props) {
+export function TransactionList({ transactions, onDelete, onEdit }: Props) {
   if (transactions.length === 0) {
     return (
       <div id="no-transactions" className="text-center py-12 px-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
@@ -22,7 +23,8 @@ export function TransactionList({ transactions, onDelete }: Props) {
       {transactions.map((t) => (
         <div
           key={t.id}
-          className={`group flex items-center justify-between p-4 bg-white rounded-xl border transition-all hover:shadow-sm ${
+          onClick={() => onEdit?.(t)}
+          className={`group flex items-center justify-between p-4 bg-white rounded-xl border transition-all hover:shadow-sm cursor-pointer ${
             t.isEstimate ? 'border-amber-100 bg-amber-50/10' : 'border-gray-100'
           }`}
         >
@@ -50,12 +52,20 @@ export function TransactionList({ transactions, onDelete }: Props) {
             <span className={`font-mono font-bold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate ? 'text-amber-600' : 'text-gray-900')}`}>
               {t.amount === 0 ? '---' : `${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`}
             </span>
-            <button
-              onClick={() => onDelete(t.id)}
-              className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-            >
-              <Trash2 size={18} />
-            </button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit?.(t); }}
+                className="p-2 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+              >
+                <Repeat size={18} className="rotate-90" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}
+                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
           </div>
         </div>
       ))}

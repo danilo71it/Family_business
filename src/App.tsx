@@ -13,12 +13,13 @@ import { it } from 'date-fns/locale';
 
 export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
-  const { transactions, group, loading: financeLoading, addTransaction, deleteTransaction, createGroup } = useFinance(profile?.groupId || null);
+  const { transactions, group, loading: financeLoading, addTransaction, deleteTransaction, updateTransaction, createGroup } = useFinance(profile?.groupId || null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [summaryMonth, setSummaryMonth] = useState(new Date());
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const alerts = useMemo(() => {
     return transactions
@@ -190,14 +191,21 @@ export default function App() {
                   transactions={transactions} 
                   initialMonth={summaryMonth}
                   onMonthChange={(date) => setSummaryMonth(date)}
+                  onEditTransaction={(t) => {
+                    setEditingTransaction(t);
+                    setSelectedDate(t.date);
+                    setIsAddingTransaction(false);
+                  }}
                   onSelectDate={(date) => {
                     if (selectedDate && isSameDay(date, selectedDate)) {
                       setSelectedDate(null);
                       setIsAddingTransaction(false);
+                      setEditingTransaction(null);
                     } else {
                       setSelectedDate(date);
                       const dayTransactions = transactions.filter(t => isSameDay(t.date, date));
                       setIsAddingTransaction(dayTransactions.length === 0);
+                      setEditingTransaction(null);
                     }
                   }} 
                 />
@@ -206,11 +214,11 @@ export default function App() {
             <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                    {selectedDate ? (isAddingTransaction ? `Nuova Voce - ${format(selectedDate, 'dd MMM', { locale: it })}` : `Registro - ${format(selectedDate, 'dd MMM', { locale: it })}`) : 'Nuova Transazione'}
+                    {editingTransaction ? 'Modifica Transazione' : (selectedDate ? (isAddingTransaction ? `Nuova Voce - ${format(selectedDate, 'dd MMM', { locale: it })}` : `Registro - ${format(selectedDate, 'dd MMM', { locale: it })}`) : 'Nuova Transazione')}
                   </h2>
-                  {selectedDate && (
+                  {(selectedDate || editingTransaction) && (
                     <button 
-                      onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); }} 
+                      onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); setEditingTransaction(null); }} 
                       className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
                     >
                       <X size={16} />
@@ -218,7 +226,22 @@ export default function App() {
                   )}
                </div>
                
-               {selectedDate ? (
+               {editingTransaction ? (
+                 <div className="animate-in fade-in slide-in-from-right-4">
+                   <TransactionForm 
+                     onAdd={async (t) => { await addTransaction(t); setEditingTransaction(null); }} 
+                     onUpdate={async (id, t) => { await updateTransaction(id, t); setEditingTransaction(null); }}
+                     userId={user.uid} 
+                     initialData={editingTransaction} 
+                   />
+                   <button 
+                    onClick={() => setEditingTransaction(null)}
+                    className="w-full mt-4 py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all border border-transparent hover:border-gray-100"
+                  >
+                    Annulla Modifica
+                  </button>
+                 </div>
+               ) : selectedDate ? (
                  <div className="space-y-4">
                     {isAddingTransaction ? (
                       <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
@@ -232,7 +255,11 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
-                        <TransactionList transactions={filteredTransactionsByDate} onDelete={deleteTransaction} />
+                        <TransactionList 
+                          transactions={filteredTransactionsByDate} 
+                          onDelete={deleteTransaction}
+                          onEdit={(t) => setEditingTransaction(t)}
+                        />
                         <button 
                           onClick={() => setIsAddingTransaction(true)}
                           className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 active:scale-95"
