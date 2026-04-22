@@ -6,20 +6,42 @@ import { TransactionForm } from './components/TransactionForm';
 import { TransactionList } from './components/TransactionList';
 import { Stats } from './components/Stats';
 import { CalendarView } from './components/CalendarView';
-import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X } from 'lucide-react';
+import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon } from 'lucide-react';
 import { ViewMode, Transaction } from './types';
 import { isAfter, isToday, addDays, format, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
-  const { transactions, group, loading: financeLoading, addTransaction, deleteTransaction, updateTransaction, createGroup } = useFinance(profile?.groupId || null);
+  const { 
+    transactions, group, loading: financeLoading, 
+    addTransaction, deleteTransaction, updateTransaction, 
+    resetMonthTransactions, createGroup 
+  } = useFinance(profile?.groupId || null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [summaryMonth, setSummaryMonth] = useState(new Date());
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [resetConfirmationStep, setResetConfirmationStep] = useState(0);
+
+  const handleResetMonth = async () => {
+    if (resetConfirmationStep < 2) {
+      setResetConfirmationStep(prev => prev + 1);
+      return;
+    }
+    
+    await resetMonthTransactions(summaryMonth);
+    setResetConfirmationStep(0);
+  };
+
+  const scrollToForm = () => {
+    const form = document.querySelector('#transaction-form-container');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   const alerts = useMemo(() => {
     return transactions
@@ -195,6 +217,7 @@ export default function App() {
                     setEditingTransaction(t);
                     setSelectedDate(t.date);
                     setIsAddingTransaction(false);
+                    setTimeout(scrollToForm, 100);
                   }}
                   onSelectDate={(date) => {
                     if (selectedDate && isSameDay(date, selectedDate)) {
@@ -206,12 +229,54 @@ export default function App() {
                       const dayTransactions = transactions.filter(t => isSameDay(t.date, date));
                       setIsAddingTransaction(dayTransactions.length === 0);
                       setEditingTransaction(null);
+                      if (dayTransactions.length === 0) {
+                        setTimeout(scrollToForm, 100);
+                      }
                     }
                   }} 
                 />
               </div>
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+            {/* Reset Month Button UI */}
+            <div className={`p-4 rounded-2xl border transition-all ${
+              resetConfirmationStep === 0 ? 'bg-white border-gray-100' : 
+              resetConfirmationStep === 1 ? 'bg-amber-50 border-amber-200 shadow-sm animate-pulse' : 
+              'bg-red-50 border-red-200 shadow-md animate-bounce'
+            }`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <p className="text-[10px] font-black uppercase text-gray-400">Strumenti</p>
+                  <p className="text-xs font-bold text-gray-700">
+                    {resetConfirmationStep === 0 ? 'Gestisci questo mese' : 
+                     resetConfirmationStep === 1 ? 'Sei sicuro? Verrà cancellata ogni voce.' : 
+                     'ULTIMA CONFERMA: Cancella TUTTO?'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {resetConfirmationStep > 0 && (
+                    <button 
+                      onClick={() => setResetConfirmationStep(0)}
+                      className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600"
+                    >
+                      Annulla
+                    </button>
+                  )}
+                  <button
+                    onClick={handleResetMonth}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      resetConfirmationStep === 0 ? 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500' :
+                      resetConfirmationStep === 1 ? 'bg-amber-500 text-white shadow-lg' :
+                      'bg-red-600 text-white shadow-xl scale-110'
+                    }`}
+                  >
+                    <Trash2 size={14} />
+                    {resetConfirmationStep === 0 ? 'Azzera Mese' : 'CONFERMA'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none">
                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
                     {editingTransaction ? 'Modifica Transazione' : (selectedDate ? (isAddingTransaction ? `Nuova Voce - ${format(selectedDate, 'dd MMM', { locale: it })}` : `Registro - ${format(selectedDate, 'dd MMM', { locale: it })}`) : 'Nuova Transazione')}

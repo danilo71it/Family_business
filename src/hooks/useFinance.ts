@@ -3,11 +3,11 @@ import { db } from '../lib/firebase';
 import { 
   collection, query, where, orderBy, onSnapshot, 
   addDoc, deleteDoc, doc, serverTimestamp, 
-  Timestamp, setDoc
+  Timestamp, setDoc, writeBatch, getDocs
 } from 'firebase/firestore';
 import { Transaction, FamilyGroup, TransactionType, RecurrenceFrequency } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
-import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
+import { addDays, addWeeks, addMonths, addYears, startOfMonth, endOfMonth } from 'date-fns';
 
 export function useFinance(groupId: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -159,5 +159,27 @@ export function useFinance(groupId: string | null) {
     }
   };
 
-  return { transactions, group, loading, addTransaction, deleteTransaction, updateTransaction, createGroup };
+  const resetMonthTransactions = async (monthDate: Date) => {
+    if (!groupId) return;
+    try {
+      const start = Timestamp.fromDate(startOfMonth(monthDate));
+      const end = Timestamp.fromDate(endOfMonth(monthDate));
+      
+      const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+      const q = query(transactionsRef, where('date', '>=', start), where('date', '<=', end));
+      
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+    } catch (err) {
+      handleFirestoreError(err, 'delete', `groups/${groupId}/transactions/reset`);
+    }
+  };
+
+  return { transactions, group, loading, addTransaction, deleteTransaction, updateTransaction, resetMonthTransactions, createGroup };
 }

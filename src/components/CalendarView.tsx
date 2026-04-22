@@ -5,7 +5,7 @@ import {
   addDays, isToday
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell } from 'lucide-react';
 import { Transaction } from '../types';
 
 interface Props {
@@ -163,9 +163,11 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
                 <div className="flex gap-1 mt-1">
                   {dayTransactions.some(t => t.reminderEnabled) && (
                     <div 
-                      className="w-1.5 h-1.5 rounded-full bg-purple-400" 
-                      title="Contiene alert" 
-                    />
+                      className="text-purple-400 p-0.5" 
+                      title="Contiene scadenze con alert attivo" 
+                    >
+                      <Bell size={10} />
+                    </div>
                   )}
                 </div>
               </div>
