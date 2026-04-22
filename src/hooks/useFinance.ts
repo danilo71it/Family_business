@@ -15,7 +15,8 @@ export function useFinance(groupId: string | null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!groupId) {
+    const cleanGroupId = groupId?.trim();
+    if (!cleanGroupId) {
       setTransactions([]);
       setGroup(null);
       setLoading(false);
@@ -24,14 +25,14 @@ export function useFinance(groupId: string | null) {
 
     setLoading(true);
 
-    const groupRef = doc(db, 'groups', groupId);
+    const groupRef = doc(db, 'groups', cleanGroupId);
     const unsubGroup = onSnapshot(groupRef, (doc) => {
       if (doc.exists()) {
         setGroup({ id: doc.id, ...doc.data() } as FamilyGroup);
       }
-    }, (err) => handleFirestoreError(err, 'get', `groups/${groupId}`));
+    }, (err) => handleFirestoreError(err, 'get', `groups/${cleanGroupId}`));
 
-    const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+    const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
     const q = query(transactionsRef, orderBy('date', 'desc'));
     
     const unsubTransactions = onSnapshot(q, (snapshot) => {
@@ -47,7 +48,7 @@ export function useFinance(groupId: string | null) {
       });
       setTransactions(docs);
       setLoading(false);
-    }, (err) => handleFirestoreError(err, 'list', `groups/${groupId}/transactions`));
+    }, (err) => handleFirestoreError(err, 'list', `groups/${cleanGroupId}/transactions`));
 
     return () => {
       unsubGroup();
@@ -70,9 +71,10 @@ export function useFinance(groupId: string | null) {
     occurrenceCount?: number;
     reminderEnabled: boolean;
   }) => {
-    if (!groupId) return;
+    const cleanGroupId = groupId?.trim();
+    if (!cleanGroupId) return;
     try {
-      const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+      const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
       
       const INFINITE_LIMIT = 60; // 5 years limit for "infinite" recurring to avoid browser hang
       let count = t.recurring ? (t.occurrenceCount || 1) : 1;
@@ -98,7 +100,7 @@ export function useFinance(groupId: string | null) {
           description: t.description || '',
           date: Timestamp.fromDate(occurrenceDate),
           userId: t.userId,
-          groupId,
+          groupId: cleanGroupId,
           isEstimate: i === 0 ? false : (t.isEstimate || false),
           isUnknownAmount: t.isUnknownAmount || false,
           isPrivacyActive: t.isPrivacyActive || false,

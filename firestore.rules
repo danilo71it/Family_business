@@ -60,16 +60,16 @@ service cloud.firestore {
                  data.category is string && data.category.size() <= 100 &&
                  data.date is timestamp &&
                  data.userId is string &&
-                 data.groupId == groupId &&
+                 data.groupId is string &&
                  data.isEstimate is bool &&
                  data.recurring is bool &&
                  data.reminderEnabled is bool &&
                  (data.isUnknownAmount == null || data.isUnknownAmount is bool) &&
                  (data.isPrivacyActive == null || data.isPrivacyActive is bool) &&
-                 (data.description == null || (data.description is string && data.description.size() <= 500)) &&
-                 (data.frequency == null || data.frequency in ['daily', 'weekly', 'monthly', 'yearly']) &&
+                 (data.description == null || data.description is string) &&
+                 (data.frequency == null || data.frequency == "" || data.frequency in ['daily', 'weekly', 'monthly', 'yearly']) &&
                  (data.occurrenceCount == null || data.occurrenceCount is number) &&
-                 (data.parentTransactionId == null || (data.parentTransactionId is string && data.parentTransactionId.size() <= 128));
+                 (data.parentTransactionId == null || data.parentTransactionId is string);
         }
 
         allow list: if isGroupMember(groupId);
