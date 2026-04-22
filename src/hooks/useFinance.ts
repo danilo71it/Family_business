@@ -63,6 +63,8 @@ export function useFinance(groupId: string | null) {
     date: Date;
     userId: string;
     isEstimate: boolean;
+    isUnknownAmount?: boolean;
+    isPrivacyActive?: boolean;
     recurring: boolean;
     frequency?: RecurrenceFrequency;
     occurrenceCount?: number;
@@ -97,7 +99,9 @@ export function useFinance(groupId: string | null) {
           date: Timestamp.fromDate(occurrenceDate),
           userId: t.userId,
           groupId,
-          isEstimate: i === 0 ? false : t.isEstimate, // First is always certain if user wants, others follow estimate flag
+          isEstimate: i === 0 ? false : (t.isEstimate || false),
+          isUnknownAmount: t.isUnknownAmount || false,
+          isPrivacyActive: t.isPrivacyActive || false,
           recurring: t.recurring,
           reminderEnabled: t.reminderEnabled,
           createdAt: serverTimestamp(),
