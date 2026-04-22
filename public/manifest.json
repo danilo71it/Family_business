@@ -2,7 +2,7 @@
   "name": "Contabilità Pro",
   "short_name": "Contabilità",
   "description": "Gestione finanze familiari semplificata.",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
