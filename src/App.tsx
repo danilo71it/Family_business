@@ -16,7 +16,7 @@ export default function App() {
   const { 
     transactions, group, loading: financeLoading, 
     addTransaction, deleteTransaction, updateTransaction, 
-    resetMonthTransactions, createGroup 
+    resetMonthTransactions, resetAllTransactions, createGroup 
   } = useFinance(profile?.groupId || null);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [summaryMonth, setSummaryMonth] = useState(new Date());
@@ -24,16 +24,31 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [resetConfirmationStep, setResetConfirmationStep] = useState(0);
+  const [resetConfig, setResetConfig] = useState<{ step: number; type: 'month' | 'all' | null }>({ step: 0, type: null });
 
-  const handleResetMonth = async () => {
-    if (resetConfirmationStep < 2) {
-      setResetConfirmationStep(prev => prev + 1);
+  const handleReset = async () => {
+    if (resetConfig.step === 0) {
+      setResetConfig({ step: 1, type: null });
       return;
     }
     
-    await resetMonthTransactions(summaryMonth);
-    setResetConfirmationStep(0);
+    if (resetConfig.step === 1) return; // Wait for type selection
+
+    if (resetConfig.type === 'month') {
+      if (resetConfig.step === 2) {
+        await resetMonthTransactions(summaryMonth);
+        setResetConfig({ step: 0, type: null });
+      } else {
+        setResetConfig(prev => ({ ...prev, step: 2 }));
+      }
+    } else if (resetConfig.type === 'all') {
+      if (resetConfig.step === 2) {
+        await resetAllTransactions();
+        setResetConfig({ step: 0, type: null });
+      } else {
+        setResetConfig(prev => ({ ...prev, step: 2 }));
+      }
+    }
   };
 
   const scrollToForm = () => {
@@ -237,42 +252,63 @@ export default function App() {
                 />
               </div>
           <div className="lg:col-span-4 space-y-6">
-            {/* Reset Month Button UI */}
+            {/* Reset Data Button UI */}
             <div className={`p-4 rounded-2xl border transition-all ${
-              resetConfirmationStep === 0 ? 'bg-white border-gray-100' : 
-              resetConfirmationStep === 1 ? 'bg-amber-50 border-amber-200 shadow-sm animate-pulse' : 
-              'bg-red-50 border-red-200 shadow-md animate-bounce'
+              resetConfig.step === 0 ? 'bg-white border-gray-100' : 
+              resetConfig.step === 1 ? 'bg-amber-50 border-amber-200' : 
+              'bg-red-50 border-red-200 shadow-md animate-pulse'
             }`}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-[10px] font-black uppercase text-gray-400">Strumenti</p>
-                  <p className="text-xs font-bold text-gray-700">
-                    {resetConfirmationStep === 0 ? 'Gestisci questo mese' : 
-                     resetConfirmationStep === 1 ? 'Sei sicuro? Verrà cancellata ogni voce.' : 
-                     'ULTIMA CONFERMA: Cancella TUTTO?'}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {resetConfirmationStep > 0 && (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400">Strumenti</p>
+                    <p className="text-xs font-bold text-gray-700">
+                      {resetConfig.step === 0 ? 'Gestione Dati' : 
+                       resetConfig.step === 1 ? 'Cosa vuoi azzerare?' : 
+                       `CONFERMA: Azzera ${resetConfig.type === 'month' ? 'questo mese' : 'TUTTO'}?`}
+                    </p>
+                  </div>
+                  {resetConfig.step > 0 && (
                     <button 
-                      onClick={() => setResetConfirmationStep(0)}
-                      className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600"
+                      onClick={() => setResetConfig({ step: 0, type: null })}
+                      className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
                     >
-                      Annulla
+                      <X size={16} />
                     </button>
                   )}
+                </div>
+
+                {resetConfig.step === 0 ? (
                   <button
-                    onClick={handleResetMonth}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                      resetConfirmationStep === 0 ? 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500' :
-                      resetConfirmationStep === 1 ? 'bg-amber-500 text-white shadow-lg' :
-                      'bg-red-600 text-white shadow-xl scale-110'
-                    }`}
+                    onClick={handleReset}
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-xl text-xs font-black transition-all"
                   >
                     <Trash2 size={14} />
-                    {resetConfirmationStep === 0 ? 'Azzera Mese' : 'CONFERMA'}
+                    Azzera Dati
                   </button>
-                </div>
+                ) : resetConfig.step === 1 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setResetConfig({ step: 2, type: 'month' })}
+                      className="py-2 bg-white border border-amber-200 text-amber-600 rounded-xl text-[10px] font-black hover:bg-amber-100 transition-all uppercase"
+                    >
+                      Mese Corrente
+                    </button>
+                    <button
+                      onClick={() => setResetConfig({ step: 2, type: 'all' })}
+                      className="py-2 bg-white border border-red-200 text-red-600 rounded-xl text-[10px] font-black hover:bg-red-100 transition-all uppercase"
+                    >
+                      Tutti i Dati
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleReset}
+                    className="w-full py-3 bg-red-600 text-white rounded-xl text-xs font-black shadow-lg shadow-red-100 uppercase tracking-widest"
+                  >
+                    Conferma Cancellazione
+                  </button>
+                )}
               </div>
             </div>
 
