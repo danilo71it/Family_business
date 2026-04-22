@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2 } from 'lucide-react';
+import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
 
@@ -171,6 +171,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              onFocus={(e) => e.target.select()}
               placeholder="Esempio: Assicurazione Auto, Stipendio..."
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
               required
@@ -184,15 +185,20 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-mono">€</span>
               <input
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={isUnknownAmount ? '' : amount}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (e.target.value) setIsUnknownAmount(false);
+                  const val = e.target.value.replace(',', '.');
+                  // Allow only numbers and one dot
+                  if (/^[0-9]*\.?[0-9]*$/.test(val) || val === '') {
+                    setAmount(e.target.value);
+                    if (e.target.value) setIsUnknownAmount(false);
+                  }
                 }}
-                placeholder={isUnknownAmount ? "SCONOSCIUTO" : "0.00"}
-                disabled={(recurring && isEstimate && !amount) || isUnknownAmount}
+                placeholder={isUnknownAmount ? "SCONOSCIUTO" : (isEstimate ? "STIMA" : "0.00")}
+                disabled={isUnknownAmount}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
               />
             </div>
@@ -249,7 +255,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               isPrivacyActive ? 'bg-gray-800 border-gray-800 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
-            <Plus size={14} className={isPrivacyActive ? "rotate-45" : ""} />
+            {isPrivacyActive ? <EyeOff size={14} /> : <Eye size={14} />}
             Privacy
           </button>
 
@@ -322,6 +328,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
                   min="1"
                   max="120"
                   value={occurrenceCount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setOccurrenceCount(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                 />

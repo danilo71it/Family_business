@@ -1,0 +1,17 @@
+{
+  "name": "Contabilità Famiglia",
+  "short_name": "Contabilità",
+  "description": "App di contabilità familiare per gestire spese e entrate.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2845/2845873.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
