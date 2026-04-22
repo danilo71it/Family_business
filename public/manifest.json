@@ -1,17 +1,17 @@
 {
-  "name": "Contabilità Famiglia",
+  "name": "Contabilità Pro",
   "short_name": "Contabilità",
-  "description": "App di contabilità familiare per gestire spese e entrate.",
+  "description": "Gestione finanze familiari semplificata.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2845/2845873.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/781/781760.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

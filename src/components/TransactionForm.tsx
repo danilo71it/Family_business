@@ -48,47 +48,66 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [isPrivacyActive, setIsPrivacyActive] = useState(false);
   const [isUnknownAmount, setIsUnknownAmount] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDelete = async () => {
-    if (!initialData || !onDelete) return;
-
-    if (initialData.recurring && initialData.parentTransactionId) {
-      if (window.confirm('Questa è una transazione ricorrente. Vuoi cancellare l\'intera serie (passata e futura) o solo questa singola occorrenza? Clicca OK per cancellare TUTTA LA SERIE, Annulla per cancellare SOLO QUESTA.')) {
-        if (onDeleteSeries) {
-          await onDeleteSeries(initialData.parentTransactionId);
+    if (!initialData || !onDelete || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      if (initialData.recurring && initialData.parentTransactionId) {
+        if (window.confirm('Questa è una transazione ricorrente. Vuoi cancellare l\'intera serie (passata e futura) o solo questa singola occorrenza? Clicca OK per cancellare TUTTA LA SERIE, Annulla per cancellare SOLO QUESTA.')) {
+          if (onDeleteSeries) {
+            await onDeleteSeries(initialData.parentTransactionId);
+          } else {
+            await onDelete(initialData.id);
+          }
         } else {
-          await onDelete(initialData.id);
+          if (window.confirm('Confermi di voler cancellare questa singola occorrenza?')) {
+            await onDelete(initialData.id);
+          }
         }
       } else {
-        if (window.confirm('Confermi di voler cancellare questa singola occorrenza?')) {
+        if (window.confirm('Confermi di voler cancellare questa transazione?')) {
           await onDelete(initialData.id);
         }
       }
-    } else {
-      if (window.confirm('Confermi di voler cancellare questa transazione?')) {
-        await onDelete(initialData.id);
-      }
+    } catch (err) {
+      console.error(err);
+      alert('Errore durante l\'eliminazione.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!category.trim()) return;
     
-    // Handle amount parsing more robustly
-    let parsedAmount = 0;
-    if (!isUnknownAmount) {
-      parsedAmount = parseFloat(amount.replace(',', '.'));
-      if (isNaN(parsedAmount)) parsedAmount = 0;
-    }
+    setIsSubmitting(true);
+    try {
+      // Handle amount parsing more robustly
+      let parsedAmount = 0;
+      if (!isUnknownAmount) {
+        parsedAmount = parseFloat(amount.replace(',', '.'));
+        if (isNaN(parsedAmount)) parsedAmount = 0;
+      }
 
-    if (!isEstimate && !isUnknownAmount && parsedAmount <= 0 && amount !== '0') {
-      // If it's a "certain" transaction (not variable/unknown), it must have an amount > 0
-      // unless specifically '0' was intended (rare for expenses but possible)
-      if (!amount || isNaN(parsedAmount)) return;
-    }
+      if (!isEstimate && !isUnknownAmount && parsedAmount <= 0 && amount !== '0') {
+        // If it's a "certain" transaction (not variable/unknown), it must have an amount > 0
+        // unless specifically '0' was intended (rare for expenses but possible)
+        if (!amount || isNaN(parsedAmount)) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
     const selectedDate = new Date(date);
+    if (isNaN(selectedDate.getTime())) {
+      alert('Data non valida.');
+      setIsSubmitting(false);
+      return;
+    }
     selectedDate.setHours(12, 0, 0, 0);
 
     const data: any = {
@@ -103,7 +122,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       isPrivacyActive,
       recurring,
       frequency: recurring ? frequency : undefined,
-      occurrenceCount: recurring ? (isInfinite ? 60 : parseInt(occurrenceCount)) : undefined,
+      occurrenceCount: recurring ? (isInfinite ? 60 : (parseInt(occurrenceCount) || 1)) : undefined,
       reminderEnabled,
     };
 
@@ -134,6 +153,12 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       setIsInfinite(false);
       setIsEstimate(false);
       setReminderEnabled(true);
+    }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Errore durante il salvataggio: ${err.message || 'Riprova'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -351,11 +376,12 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       <div className="flex gap-4">
         <button
           type="submit"
-          className={`flex-1 py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] ${
+          disabled={isSubmitting}
+          className={`flex-1 py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
             type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
           }`}
         >
-          {initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita')}
+          {isSubmitting ? 'Salvataggio...' : (initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita'))}
         </button>
         
         {initialData && onDelete && (
