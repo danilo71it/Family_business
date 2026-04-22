@@ -231,6 +231,7 @@ export default function App() {
               <div className="lg:col-span-8">
                 <CalendarView 
                   transactions={transactions} 
+                  selectedDate={selectedDate}
                   initialMonth={summaryMonth}
                   onMonthChange={(date) => setSummaryMonth(date)}
                   onEditTransaction={(t) => {

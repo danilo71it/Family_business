@@ -142,7 +142,7 @@ export function useFinance(groupId: string | null) {
     }
   };
 
-  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
+  const updateTransaction = async (id: string, updates: any) => {
     if (!groupId) return;
     try {
       const docRef = doc(db, 'groups', groupId, 'transactions', id);
@@ -151,6 +151,39 @@ export function useFinance(groupId: string | null) {
       // Handle date conversion if present
       if (updates.date) {
         dataToSave.date = Timestamp.fromDate(updates.date);
+      }
+
+      // Logic for shifting future recurring dates
+      if (updates.shiftFutureDates && updates.originalDate && updates.date) {
+        const currentTx = transactions.find(t => t.id === id);
+        if (currentTx?.parentTransactionId) {
+          const timeDiff = updates.date.getTime() - updates.originalDate.getTime();
+          
+          const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+          const q = query(
+            transactionsRef, 
+            where('parentTransactionId', '==', currentTx.parentTransactionId),
+            where('date', '>', Timestamp.fromDate(updates.originalDate))
+          );
+          
+          const snapshot = await getDocs(q);
+          const batch = writeBatch(db);
+          
+          snapshot.docs.forEach(doc => {
+            const oldDate = (doc.data().date as Timestamp).toDate();
+            const newDate = new Date(oldDate.getTime() + timeDiff);
+            batch.update(doc.ref, { 
+              date: Timestamp.fromDate(newDate),
+              updatedAt: serverTimestamp() 
+            });
+          });
+          
+          await batch.commit();
+        }
+        
+        // Clean up internal flags
+        delete dataToSave.shiftFutureDates;
+        delete dataToSave.originalDate;
       }
 
       // Logic for stopping recurrence

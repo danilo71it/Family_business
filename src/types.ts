@@ -23,7 +23,9 @@ export interface Transaction {
   updatedAt: Date;
   
   // New fields
-  isEstimate: boolean; // presunta vs certa
+  isEstimate: boolean; // variabile vs certa
+  isUnknownAmount?: boolean; // importo da definire
+  isPrivacyActive?: boolean; // mostra descrizione invece di importo
   recurring: boolean;
   frequency?: RecurrenceFrequency;
   occurrenceCount?: number;

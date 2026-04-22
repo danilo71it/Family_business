@@ -30,6 +30,8 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
       setOccurrenceCount(initialData.occurrenceCount?.toString() || '1');
       setReminderEnabled(initialData.reminderEnabled ?? true);
       setIsInfinite(initialData.occurrenceCount === 60);
+      setIsPrivacyActive(initialData.isPrivacyActive || false);
+      setIsUnknownAmount(initialData.isUnknownAmount || false);
     } else if (defaultDate) {
       setDate(format(defaultDate, 'yyyy-MM-dd'));
     }
@@ -42,17 +44,19 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly');
   const [occurrenceCount, setOccurrenceCount] = useState('1');
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [isPrivacyActive, setIsPrivacyActive] = useState(false);
+  const [isUnknownAmount, setIsUnknownAmount] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!category.trim()) return;
-    const parsedAmount = parseFloat(amount || '0');
-    if (!isEstimate && (!amount || isNaN(parsedAmount))) return;
+    const parsedAmount = isUnknownAmount ? 0 : parseFloat(amount || '0');
+    if (!isEstimate && !isUnknownAmount && (!amount || isNaN(parsedAmount))) return;
 
     const selectedDate = new Date(date);
     selectedDate.setHours(12, 0, 0, 0);
 
-    const data = {
+    const data: any = {
       amount: parsedAmount,
       type,
       category: category.trim(),
@@ -60,6 +64,8 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
       date: selectedDate,
       userId,
       isEstimate: recurring ? isEstimate : false,
+      isUnknownAmount,
+      isPrivacyActive,
       recurring,
       frequency: recurring ? frequency : undefined,
       occurrenceCount: recurring ? (isInfinite ? 60 : parseInt(occurrenceCount)) : undefined,
@@ -73,6 +79,14 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
     }
 
     if (initialData && onUpdate) {
+      // Logic for shifting future recurring dates
+      const originalDateStr = format(initialData.date, 'yyyy-MM-dd');
+      if (initialData.recurring && initialData.parentTransactionId && originalDateStr !== date) {
+        if (window.confirm('Hai modificato la data di una transazione ricorrente. Vuoi spostare di conseguenza anche tutte le date successive della serie?')) {
+          data.shiftFutureDates = true;
+          data.originalDate = initialData.date;
+        }
+      }
       await onUpdate(initialData.id, data);
     } else {
       await onAdd(data);
@@ -137,12 +151,15 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
               <input
                 type="number"
                 step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                disabled={recurring && isEstimate && !amount}
+                value={isUnknownAmount ? '' : amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (e.target.value) setIsUnknownAmount(false);
+                }}
+                placeholder={isUnknownAmount ? "SCONOSCIUTO" : "0.00"}
+                disabled={(recurring && isEstimate && !amount) || isUnknownAmount}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
-                required={!(recurring && isEstimate)}
+                required={!(recurring && isEstimate) && !isUnknownAmount}
               />
             </div>
           </div>
@@ -189,6 +206,36 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
               Importo Variabile
             </button>
           )}
+
+          {/* Privacy Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsPrivacyActive(!isPrivacyActive)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+              isPrivacyActive ? 'bg-gray-800 border-gray-800 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            <Plus size={14} className={isPrivacyActive ? "rotate-45" : ""} />
+            Privacy
+          </button>
+
+          {/* Unknown Amount Toggle Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsUnknownAmount(!isUnknownAmount);
+              if (!isUnknownAmount) {
+                setAmount('');
+                setIsEstimate(true); // Unknown is technically variable
+              }
+            }}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+              isUnknownAmount ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            <AlertCircle size={14} />
+            Importo Sconosciuto
+          </button>
 
           {/* Alert Toggle Button - Defaulted to ON */}
           <button

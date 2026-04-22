@@ -14,9 +14,10 @@ interface Props {
   onEditTransaction?: (transaction: Transaction) => void;
   onMonthChange?: (date: Date) => void;
   initialMonth?: Date;
+  selectedDate?: Date | null;
 }
 
-export function CalendarView({ transactions, onSelectDate, onEditTransaction, onMonthChange, initialMonth }: Props) {
+export function CalendarView({ transactions, onSelectDate, onEditTransaction, onMonthChange, initialMonth, selectedDate }: Props) {
   const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
 
   const monthStart = startOfMonth(currentMonth);
@@ -101,7 +102,9 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
               onClick={() => onSelectDate(day)}
               className={`min-h-[100px] p-2 border-r border-b border-gray-50 transition-all cursor-pointer hover:bg-blue-50/30 group ${
                 !isCurrentMonth ? 'bg-gray-50/30' : ''
-              } ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+              } ${idx % 7 === 6 ? 'border-r-0' : ''} ${
+                selectedDate && isSameDay(day, selectedDate) ? 'bg-blue-50 border-2 border-blue-200 shadow-inner' : ''
+              }`}
             >
               <div className="flex justify-between items-start mb-1">
                 <span className={`text-sm font-bold ${
@@ -113,7 +116,7 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
               </div>
 
               <div className="space-y-1">
-                {/* Individual transactions (recurring or variable) */}
+                {/* Individual transactions (recurring, variable or privacy) */}
                 {individualTxs.map(t => (
                   <div 
                     key={t.id} 
@@ -121,17 +124,17 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
                       e.stopPropagation();
                       onEditTransaction?.(t);
                     }}
-                    className={`text-[10px] font-black truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 ${
+                    className={`text-[10px] font-black truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase ${
                       t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    } ${t.isEstimate ? 'opacity-70 border border-dashed border-current' : ''}`}
-                    title={t.isEstimate ? `Valore variabile: ${t.category}` : t.category}
+                    } ${t.isEstimate || t.isUnknownAmount ? 'opacity-70 border border-dashed border-current' : ''}`}
+                    title={t.isUnknownAmount ? "Importo da definire" : t.category}
                   >
-                    {t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                    {t.isUnknownAmount ? 'DA DEFINIRE' : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
                   </div>
                 ))}
 
                 {/* Sums for non-recurring/certain transactions */}
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 uppercase">
                   {incomeSum > 0 && (
                     <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
                       <TrendingUp size={10} />
