@@ -156,7 +156,7 @@ export default function App() {
               <Wallet size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight leading-none">Family business</h1>
+              <h1 className="text-xl font-bold tracking-tight leading-none">Family business</h1>
               <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{group?.name}</span>
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function App() {
             <div className="flex gap-4">
               {alerts.map(alert => (
                 <div key={alert.id} className="min-w-[200px] bg-white/50 p-3 rounded-xl border border-white/50">
-                  <p className="text-[10px] font-black uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
+                  <p className="text-[10px] font-bold uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
                   <p className="text-sm font-bold text-gray-900 truncate">{alert.category}</p>
                   <p className="text-xs font-mono font-bold text-gray-500">
                     {alert.amount === 0 ? 'Da definire' : alert.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
@@ -221,14 +221,14 @@ export default function App() {
         {viewMode === 'summary' ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight capitalize">
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">
                 Riepilogo - {format(summaryMonth, 'MMMM yyyy', { locale: it })}
               </h2>
             </div>
             <Stats transactions={filteredTransactionsByMonth} />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-12 space-y-6">
-                <h2 className="text-lg font-black text-gray-900 tracking-tight">Registro Transazioni</h2>
+                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Registro Transazioni</h2>
                 <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} />
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function App() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase text-gray-400">Strumenti</p>
+                    <p className="text-[10px] font-bold uppercase text-gray-400">Strumenti</p>
                     <p className="text-xs font-bold text-gray-700">
                       {resetConfig.step === 0 ? 'Gestione Dati' : 
                        resetConfig.step === 1 ? 'Cosa vuoi azzerare?' : 
@@ -295,7 +295,7 @@ export default function App() {
                 {resetConfig.step === 0 ? (
                   <button
                     onClick={handleReset}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-xl text-xs font-black transition-all"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-xl text-xs font-bold transition-all"
                   >
                     <Trash2 size={14} />
                     Azzera Dati
@@ -304,13 +304,13 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => setResetConfig({ step: 2, type: 'month' })}
-                      className="py-2 bg-white border border-amber-200 text-amber-600 rounded-xl text-[10px] font-black hover:bg-amber-100 transition-all uppercase"
+                      className="py-2 bg-white border border-amber-200 text-amber-600 rounded-xl text-[10px] font-bold hover:bg-amber-100 transition-all uppercase"
                     >
                       Mese Corrente
                     </button>
                     <button
                       onClick={() => setResetConfig({ step: 2, type: 'all' })}
-                      className="py-2 bg-white border border-red-200 text-red-600 rounded-xl text-[10px] font-black hover:bg-red-100 transition-all uppercase"
+                      className="py-2 bg-white border border-red-200 text-red-600 rounded-xl text-[10px] font-bold hover:bg-red-100 transition-all uppercase"
                     >
                       Tutti i Dati
                     </button>
@@ -318,7 +318,7 @@ export default function App() {
                 ) : (
                   <button
                     onClick={handleReset}
-                    className="w-full py-3 bg-red-600 text-white rounded-xl text-xs font-black shadow-lg shadow-red-100 uppercase tracking-widest"
+                    className="w-full py-3 bg-red-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-100 uppercase tracking-widest"
                   >
                     Conferma Cancellazione
                   </button>

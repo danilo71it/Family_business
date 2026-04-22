@@ -64,17 +64,23 @@ service cloud.firestore {
                  data.category is string &&
                  data.date is timestamp &&
                  data.userId is string &&
-                 data.groupId is string &&
+                 data.groupId == groupId &&
                  data.isEstimate is bool &&
                  data.recurring is bool &&
-                 data.reminderEnabled is bool;
+                 data.reminderEnabled is bool &&
+                 (data.get('isUnknownAmount', null) == null || data.isUnknownAmount is bool) &&
+                 (data.get('isPrivacyActive', null) == null || data.isPrivacyActive is bool) &&
+                 (data.get('description', null) == null || data.description is string) &&
+                 (data.get('frequency', null) == null || data.frequency == "" || data.frequency in ['daily', 'weekly', 'monthly', 'yearly']) &&
+                 (data.get('occurrenceCount', null) == null || data.occurrenceCount is number) &&
+                 (data.get('parentTransactionId', null) == null || data.parentTransactionId is string);
         }
 
-        allow list: if isSignedIn();
-        allow get: if isSignedIn();
-        allow create: if isSignedIn() && isValidTransaction(incoming());
-        allow update: if isSignedIn() && isValidTransaction(incoming());
-        allow delete: if isSignedIn();
+        allow list: if isGroupMember(groupId);
+        allow get: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId) && isValidTransaction(incoming());
+        allow update: if isGroupMember(groupId) && isValidTransaction(incoming());
+        allow delete: if isGroupMember(groupId);
       }
     }
   }
