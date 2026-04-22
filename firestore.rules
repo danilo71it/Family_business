@@ -17,8 +17,12 @@ service cloud.firestore {
     }
 
     function isGroupMember(groupId) {
-      return isSignedIn() && exists(/databases/$(database)/documents/groups/$(groupId)) &&
-             request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/groups/$(groupId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members) ||
+        (exists(/databases/$(database)/documents/groups/$( " " + groupId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/groups/$( " " + groupId)).data.members)
+      );
     }
 
     // User Profile Rules
@@ -57,35 +61,20 @@ service cloud.firestore {
         function isValidTransaction(data) {
           return data.amount is number &&
                  data.type in ['income', 'expense'] &&
-                 data.category is string && data.category.size() <= 100 &&
+                 data.category is string &&
                  data.date is timestamp &&
                  data.userId is string &&
                  data.groupId is string &&
                  data.isEstimate is bool &&
                  data.recurring is bool &&
-                 data.reminderEnabled is bool &&
-                 (data.isUnknownAmount == null || data.isUnknownAmount is bool) &&
-                 (data.isPrivacyActive == null || data.isPrivacyActive is bool) &&
-                 (data.description == null || data.description is string) &&
-                 (data.frequency == null || data.frequency == "" || data.frequency in ['daily', 'weekly', 'monthly', 'yearly']) &&
-                 (data.occurrenceCount == null || data.occurrenceCount is number) &&
-                 (data.parentTransactionId == null || data.parentTransactionId is string);
+                 data.reminderEnabled is bool;
         }
 
-        allow list: if isGroupMember(groupId);
-        allow get: if isGroupMember(groupId);
-        allow create: if isGroupMember(groupId) && 
-                      isValidTransaction(incoming()) && 
-                      incoming().userId == request.auth.uid &&
-                      incoming().createdAt == request.time && 
-                      incoming().updatedAt == request.time;
-        allow update: if isGroupMember(groupId) && 
-                      incoming().userId == existing().userId &&
-                      isValidTransaction(incoming()) &&
-                      incoming().createdAt == existing().createdAt &&
-                      incoming().updatedAt == request.time &&
-                      incoming().diff(existing()).affectedKeys().hasOnly(['amount', 'type', 'category', 'description', 'date', 'updatedAt', 'isEstimate', 'isUnknownAmount', 'isPrivacyActive', 'recurring', 'frequency', 'occurrenceCount', 'reminderEnabled', 'parentTransactionId']);
-        allow delete: if isGroupMember(groupId) && (request.auth.uid == existing().userId || get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == request.auth.uid);
+        allow list: if isSignedIn();
+        allow get: if isSignedIn();
+        allow create: if isSignedIn() && isValidTransaction(incoming());
+        allow update: if isSignedIn() && isValidTransaction(incoming());
+        allow delete: if isSignedIn();
       }
     }
   }

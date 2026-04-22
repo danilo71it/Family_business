@@ -119,20 +119,22 @@ export function useFinance(groupId: string | null) {
         await addDoc(transactionsRef, data);
       }
     } catch (err) {
-      handleFirestoreError(err, 'create', `groups/${groupId}/transactions`);
+      const cleanGroupId = groupId?.trim();
+      handleFirestoreError(err, 'create', `groups/${cleanGroupId}/transactions`);
     }
   };
 
   const createGroup = async (name: string, userId: string) => {
     try {
       const groupRef = doc(collection(db, 'groups'));
+      const gid = groupRef.id.trim();
       const newGroup = {
-        name,
+        name: name.trim(),
         ownerId: userId,
         members: [userId],
       };
-      await setDoc(groupRef, newGroup);
-      return groupRef.id;
+      await setDoc(doc(db, 'groups', gid), newGroup);
+      return gid;
     } catch (err) {
       handleFirestoreError(err, 'create', 'groups');
       return '';

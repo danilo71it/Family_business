@@ -13,6 +13,14 @@ import { it } from 'date-fns/locale';
 
 export default function App() {
   const { user, profile, loading: authLoading, login, logout, updateProfile } = useAuth();
+
+  // Cleanup: if profile has a groupId with spaces, trim it and update DB once
+  React.useEffect(() => {
+    if (profile?.groupId && (profile.groupId.startsWith(' ') || profile.groupId.endsWith(' '))) {
+      console.log('Cleaning up malformed groupId...');
+      updateProfile({ groupId: profile.groupId.trim() });
+    }
+  }, [profile, updateProfile]);
   const { 
     transactions, group, loading: financeLoading, 
     addTransaction, deleteTransaction, deleteTransactionSeries, updateTransaction, 

@@ -27,7 +27,9 @@ export function useAuth() {
           await setDoc(userRef, newProfile);
           setProfile(newProfile);
         } else {
-          setProfile(userSnap.data() as UserProfile);
+          const data = userSnap.data() as UserProfile;
+          if (data.groupId) data.groupId = data.groupId.trim();
+          setProfile(data);
         }
       } else {
         setProfile(null);
@@ -56,9 +58,12 @@ export function useAuth() {
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) return;
+    const cleanData = { ...data };
+    if (cleanData.groupId) cleanData.groupId = cleanData.groupId.trim();
+    
     const userRef = doc(db, 'users', user.uid);
-    await setDoc(userRef, data, { merge: true });
-    setProfile(prev => prev ? { ...prev, ...data } : null);
+    await setDoc(userRef, cleanData, { merge: true });
+    setProfile(prev => prev ? { ...prev, ...cleanData } : null);
   };
 
   return { user, profile, loading, login, logout, updateProfile };
