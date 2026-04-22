@@ -38,7 +38,7 @@ export function TransactionList({ transactions, onDelete, onEdit }: Props) {
                 {t.recurring && <Repeat size={14} className="text-blue-500" />}
                 {t.isEstimate && (
                   <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
-                    Presunta
+                    Variabile
                   </span>
                 )}
                 {t.description && <span className="text-sm text-gray-400 font-normal hidden sm:inline">• {t.description}</span>}

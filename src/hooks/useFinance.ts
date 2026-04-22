@@ -3,7 +3,7 @@ import { db } from '../lib/firebase';
 import { 
   collection, query, where, orderBy, onSnapshot, 
   addDoc, deleteDoc, doc, serverTimestamp, 
-  Timestamp, setDoc, writeBatch, getDocs
+  Timestamp, setDoc, writeBatch, getDocs, deleteField
 } from 'firebase/firestore';
 import { Transaction, FamilyGroup, TransactionType, RecurrenceFrequency } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
@@ -173,12 +173,9 @@ export function useFinance(groupId: string | null) {
           snapshot.docs.forEach(d => batch.delete(d.ref));
           
           // Also explicitly remove recurrence fields from the current document being updated
-          // In Firestore, to remove fields with merge: true, we can use deleteField() or just set them to null/delete if we use setDoc without merge
-          // But here we use merge: true. Many SDKs use fieldValue.delete()
-          // Let's import deleteField from firebase/firestore
-          dataToSave.parentTransactionId = null; 
-          dataToSave.frequency = null;
-          dataToSave.occurrenceCount = null;
+          dataToSave.parentTransactionId = deleteField(); 
+          dataToSave.frequency = deleteField();
+          dataToSave.occurrenceCount = deleteField();
 
           await batch.commit();
         }

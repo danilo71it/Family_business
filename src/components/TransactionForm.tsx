@@ -66,6 +66,12 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
       reminderEnabled,
     };
 
+    // If we are editing a "variable" transaction and provide an amount > 0, 
+    // it's no longer variable/estimate
+    if (initialData?.isEstimate && parsedAmount > 0) {
+      data.isEstimate = false;
+    }
+
     if (initialData && onUpdate) {
       await onUpdate(initialData.id, data);
     } else {
@@ -200,6 +206,19 @@ export function TransactionForm({ onAdd, onUpdate, userId, defaultDate, initialD
 
       {recurring && (
         <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl animate-in fade-in slide-in-from-top-2">
+          {initialData?.parentTransactionId && initialData.recurring && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm('Vuoi interrompere la serie ricorrente? Le transazioni future verranno eliminate.')) {
+                  await onUpdate?.(initialData.id, { recurring: false });
+                }
+              }}
+              className="w-full py-2 bg-white border border-red-200 text-red-500 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-red-50 mb-2 transition-all"
+            >
+              Interrompi Serie Ricorrente
+            </button>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold uppercase text-gray-400 pl-1">Frequenza</label>

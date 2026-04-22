@@ -60,10 +60,15 @@ export default function App() {
 
   const alerts = useMemo(() => {
     return transactions
-      .filter(t => t.reminderEnabled && (isAfter(t.date, new Date()) || isToday(t.date)))
+      .filter(t => 
+        t.reminderEnabled && 
+        (isAfter(t.date, new Date()) || isToday(t.date)) &&
+        t.date.getMonth() === summaryMonth.getMonth() && 
+        t.date.getFullYear() === summaryMonth.getFullYear()
+      )
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 5);
-  }, [transactions]);
+  }, [transactions, summaryMonth]);
 
   const filteredTransactionsByMonth = useMemo(() => {
     return transactions.filter(t => 
