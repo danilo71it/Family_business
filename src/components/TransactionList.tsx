@@ -37,7 +37,7 @@ export function TransactionList({ transactions, onDelete, onEdit }: Props) {
                 <h4 className="font-semibold text-gray-900">{t.category}</h4>
                 {t.recurring && <Repeat size={14} className="text-blue-500" />}
                 {t.isEstimate && (
-                  <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
+                  <span className="text-[10px] font-semibold uppercase text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
                     Variabile
                   </span>
                 )}
@@ -49,8 +49,8 @@ export function TransactionList({ transactions, onDelete, onEdit }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
-            <span className={`font-mono font-bold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate || t.isUnknownAmount ? 'text-amber-600' : 'text-gray-900')}`}>
-              {t.isUnknownAmount ? 'DA DEFINIRE' : (t.amount === 0 ? '---' : `${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`)}
+            <span className={`font-mono font-semibold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate || t.isUnknownAmount ? 'text-amber-600' : 'text-gray-900')}`}>
+              {t.isUnknownAmount ? (t.description || t.category || 'DA DEFINIRE') : (t.amount === 0 ? '---' : `${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`)}
             </span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button

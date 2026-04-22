@@ -250,7 +250,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           <button
             type="button"
             onClick={() => setRecurring(!recurring)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
               recurring ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -263,7 +263,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             <button
               type="button"
               onClick={() => setIsEstimate(!isEstimate)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
                 isEstimate ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
               }`}
             >
@@ -276,7 +276,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           <button
             type="button"
             onClick={() => setIsPrivacyActive(!isPrivacyActive)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
               isPrivacyActive ? 'bg-gray-800 border-gray-800 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -294,7 +294,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
                 setIsEstimate(true); // Unknown is technically variable
               }
             }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
               isUnknownAmount ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -306,7 +306,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           <button
             type="button"
             onClick={() => setReminderEnabled(!reminderEnabled)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
               reminderEnabled ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -377,7 +377,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`flex-1 py-4 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 py-4 text-white font-semibold rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
             type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
           }`}
         >

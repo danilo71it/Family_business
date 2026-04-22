@@ -56,7 +56,7 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-50">
-        <h2 className="text-xl font-bold text-gray-900 tracking-tighter capitalize">
+        <h2 className="text-xl font-semibold text-gray-900 tracking-tighter capitalize">
           {format(currentMonth, 'MMMM yyyy', { locale: it })}
         </h2>
         <div className="flex gap-2">
@@ -75,7 +75,7 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
       {/* Weekdays Header */}
       <div className="grid grid-cols-7 bg-gray-50/50 border-b border-gray-50">
         {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(day => (
-          <div key={day} className="py-3 text-center text-[10px] font-bold uppercase tracking-tight text-gray-400">
+          <div key={day} className="py-3 text-center text-[10px] font-semibold uppercase tracking-tight text-gray-400">
             {day}
           </div>
         ))}
@@ -124,12 +124,12 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
                       e.stopPropagation();
                       onEditTransaction?.(t);
                     }}
-                    className={`text-[10px] font-bold tracking-tighter truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase ${
+                    className={`text-[10px] font-semibold tracking-tighter truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase ${
                       t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     } ${t.isEstimate || t.isUnknownAmount ? 'opacity-70 border border-dashed border-current' : ''}`}
-                    title={t.isUnknownAmount ? (t.description || "Importo da definire") : t.category}
+                    title={t.isUnknownAmount ? (t.description || t.category || "Importo da definire") : t.category}
                   >
-                    {t.isUnknownAmount ? (t.description || 'DA DEFINIRE') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
+                    {t.isUnknownAmount ? (t.description || t.category || 'DA DEFINIRE') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
                   </div>
                 ))}
 

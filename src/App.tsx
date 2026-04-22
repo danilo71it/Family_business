@@ -207,10 +207,10 @@ export default function App() {
             <div className="flex gap-4">
               {alerts.map(alert => (
                 <div key={alert.id} className="min-w-[200px] bg-white/50 p-3 rounded-xl border border-white/50">
-                  <p className="text-[10px] font-bold uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
-                  <p className="text-sm font-bold text-gray-900 truncate">{alert.category}</p>
-                  <p className="text-xs font-mono font-bold text-gray-500">
-                    {alert.amount === 0 ? 'Da definire' : alert.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+                  <p className="text-[10px] font-semibold uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{alert.category}</p>
+                  <p className="text-xs font-mono font-semibold text-gray-500">
+                    {alert.isUnknownAmount ? 'Importo Variabile' : alert.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
                   </p>
                 </div>
               ))}
@@ -221,14 +221,14 @@ export default function App() {
         {viewMode === 'summary' ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">
+              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight capitalize">
                 Riepilogo - {format(summaryMonth, 'MMMM yyyy', { locale: it })}
               </h2>
             </div>
             <Stats transactions={filteredTransactionsByMonth} />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-12 space-y-6">
-                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Registro Transazioni</h2>
+                <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Registro Transazioni</h2>
                 <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} />
               </div>
             </div>
