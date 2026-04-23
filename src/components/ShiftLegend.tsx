@@ -10,9 +10,7 @@ interface Props {
 export function ShiftLegend({ shifts, cycle, overrides = [] }: Props) {
   if (shifts.length === 0) return null;
 
-  // Find IDs of shifts actually being used in cycle or overrides
   const displayedShifts = shifts;
-  if (displayedShifts.length === 0) return null;
 
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-2 px-3 shadow-sm">

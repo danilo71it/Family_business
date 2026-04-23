@@ -23,11 +23,11 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
   const [startDate, setStartDate] = useState(cycle ? format(cycle.startDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
 
   const DEFAULT_PRESETS: WorkShift[] = [
-    { id: 'preset-m', name: 'Mattina', label: 'Mattina', color: '#f59e0b' },
-    { id: 'preset-p', name: 'Pomeriggio', label: 'Pomeriggio', color: '#06b6d4' },
-    { id: 'preset-n', name: 'Notte', label: 'Notte', color: '#8b5cf6' },
-    { id: 'preset-r', name: 'Riposo', label: 'Riposo', color: '#94a3b8' },
-    { id: 'preset-c', name: 'Chiusura aziendale', label: 'Chiusura aziendale', color: '#64748b' },
+    { id: 'preset-m', name: 'M', label: 'MATTINA', color: '#f59e0b' },
+    { id: 'preset-p', name: 'P', label: 'POMERIGGIO', color: '#06b6d4' },
+    { id: 'preset-n', name: 'N', label: 'NOTTE', color: '#8b5cf6' },
+    { id: 'preset-r', name: 'R', label: 'RIPOSO', color: '#94a3b8' },
+    { id: 'preset-c', name: 'C', label: 'CHIUSURA', color: '#334155' },
   ];
 
   const handleAddShiftToCycle = (id: string) => {
@@ -83,7 +83,7 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                     {s.name}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-900 truncate">{s.label || s.name}</p>
+                    <p className="text-xs font-bold text-gray-900 uppercase truncate">{s.label || s.name}</p>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onDeleteShift(s.id); }}
@@ -100,7 +100,7 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                   }}
                   className="col-span-full py-3 bg-blue-50 border border-dashed border-blue-200 rounded-2xl text-xs font-bold text-blue-600 hover:bg-blue-100 transition-all"
                 >
-                  Carica Turni Predefiniti (Completi)
+                  Carica Turni Predefiniti (M, P, N, R, C)
                 </button>
               )}
             </div>
@@ -109,23 +109,23 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4 animate-in slide-in-from-top-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600 uppercase">Nome Turno (es. Mattina)</label>
+                    <label className="text-[10px] font-bold text-blue-600 uppercase">Sigla (es. M)</label>
                     <input 
                       type="text" 
-                      maxLength={20}
+                      maxLength={3}
                       value={editingShift.name}
-                      onChange={e => setEditingShift({...editingShift, name: e.target.value})}
+                      onChange={e => setEditingShift({...editingShift, name: e.target.value.toUpperCase()})}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-blue-200 text-sm font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600 uppercase">Descrizione (opzionale)</label>
+                    <label className="text-[10px] font-bold text-blue-600 uppercase">Nome Completo</label>
                     <input 
                       type="text" 
                       value={editingShift.label || ''}
                       onChange={e => setEditingShift({...editingShift, label: e.target.value})}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-blue-200 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
-                      placeholder="es. Turno Mattina Casa"
+                      placeholder="es. MATTINA"
                     />
                   </div>
                 </div>
