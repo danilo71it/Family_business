@@ -136,8 +136,8 @@ export function CalendarView({
                     {format(day, 'd')}
                   </span>
                   {holiday && (
-                    <span className="text-[8px] font-bold text-red-400 uppercase tracking-tighter leading-none max-w-[50px] truncate">
-                      {holiday.name}
+                    <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter leading-none">
+                      FESTIVO
                     </span>
                   )}
                 </div>

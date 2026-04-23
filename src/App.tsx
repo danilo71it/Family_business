@@ -79,7 +79,6 @@ export default function App() {
   const alerts = useMemo(() => {
     return transactions
       .filter(t => 
-        t.reminderEnabled && 
         (isAfter(t.date, new Date()) || isToday(t.date)) &&
         t.date.getMonth() === summaryMonth.getMonth() && 
         t.date.getFullYear() === summaryMonth.getFullYear()
@@ -161,13 +160,13 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-2 sm:px-6 py-3 sm:py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="p-1.5 sm:p-2 bg-blue-600 text-white rounded-lg sm:xl shadow-lg shadow-blue-100 uppercase text-[10px] font-black">
-              FB
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col items-start leading-none">
+              <span className="font-serif text-2xl font-bold italic text-blue-600 tracking-tight">Family</span>
+              <span className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.3em] ml-0.5">BUSINESS</span>
             </div>
-            <div className="hidden xs:block">
-              <h1 className="text-sm sm:text-lg font-bold tracking-tight leading-none truncate max-w-[80px] sm:max-w-none">Family business</h1>
-              <span className="text-[8px] sm:text-[10px] font-bold text-blue-500 uppercase tracking-widest">{group?.name}</span>
+            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">{group?.name}</span>
             </div>
           </div>
 

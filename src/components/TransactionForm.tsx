@@ -45,7 +45,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const [isInfinite, setIsInfinite] = useState(false);
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly');
   const [occurrenceCount, setOccurrenceCount] = useState('1');
-  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
   const [isPrivacyActive, setIsPrivacyActive] = useState(false);
   const [isUnknownAmount, setIsUnknownAmount] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -302,7 +302,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             Importo Sconosciuto
           </button>
 
-          {/* Alert Toggle Button - Defaulted to ON */}
+          {/* Remind Toggle Button - Defaulted to OFF */}
           <button
             type="button"
             onClick={() => setReminderEnabled(!reminderEnabled)}
@@ -311,7 +311,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             }`}
           >
             <Bell size={14} />
-            Alert
+            Remind
           </button>
         </div>
       </div>
