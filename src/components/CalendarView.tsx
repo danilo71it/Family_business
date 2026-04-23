@@ -64,7 +64,7 @@ export function CalendarView({
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-50">
-        <h2 className="text-xl font-semibold text-gray-900 tracking-tighter capitalize">
+        <h2 className="text-3xl sm:text-5xl font-serif text-gray-900 mb-1 tracking-tight capitalize">
           {format(currentMonth, 'MMMM yyyy', { locale: it })}
         </h2>
         <div className="flex gap-2">

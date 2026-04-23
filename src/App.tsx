@@ -163,7 +163,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex flex-col items-start leading-none">
-              <span className="font-serif text-2xl font-bold italic text-blue-600 tracking-tight">Family</span>
+              <span className="font-serif text-5xl text-gray-900 mb-1 tracking-tight">Family</span>
               <span className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.3em] ml-0.5">BUSINESS</span>
             </div>
             <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
@@ -191,7 +191,7 @@ export default function App() {
                 }`}
               >
                 <LayoutGrid size={14} className="sm:size-4" />
-                <span className="hidden sm:inline">Riepilogo</span>
+                <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">STATISTICHE</span>
                 <span className="sm:hidden uppercase tracking-widest">STAT</span>
               </button>
             </div>
@@ -251,7 +251,7 @@ export default function App() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-gray-900 tracking-tight capitalize">
-                Riepilogo - {format(summaryMonth, 'MMMM yyyy', { locale: it })}
+                STATISTICHE - {format(summaryMonth, 'MMMM yyyy', { locale: it })}
               </h2>
             </div>
             <Stats transactions={filteredTransactionsByMonth} />
