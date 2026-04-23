@@ -6,10 +6,14 @@ import {
 } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell } from 'lucide-react';
-import { Transaction } from '../types';
+import { Transaction, WorkShift, ShiftCycle, ShiftOverride } from '../types';
+import { getShiftForDay } from '../lib/shiftUtils';
 
 interface Props {
   transactions: Transaction[];
+  shifts?: WorkShift[];
+  cycle?: ShiftCycle | null;
+  overrides?: ShiftOverride[];
   onSelectDate: (date: Date) => void;
   onEditTransaction?: (transaction: Transaction) => void;
   onMonthChange?: (date: Date) => void;
@@ -17,7 +21,10 @@ interface Props {
   selectedDate?: Date | null;
 }
 
-export function CalendarView({ transactions, onSelectDate, onEditTransaction, onMonthChange, initialMonth, selectedDate }: Props) {
+export function CalendarView({ 
+  transactions, shifts = [], cycle, overrides = [], 
+  onSelectDate, onEditTransaction, onMonthChange, initialMonth, selectedDate 
+}: Props) {
   const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
 
   const monthStart = startOfMonth(currentMonth);
@@ -100,22 +107,48 @@ export function CalendarView({ transactions, onSelectDate, onEditTransaction, on
             <div
               key={day.toISOString()}
               onClick={() => onSelectDate(day)}
-              className={`min-h-[100px] p-2 border-r border-b border-gray-50 transition-all cursor-pointer hover:bg-blue-50/30 group ${
+              className={`min-h-[100px] p-2 border-r border-b border-gray-50 transition-all cursor-pointer hover:bg-blue-50/30 group relative ${
                 !isCurrentMonth ? 'bg-gray-50/30' : ''
               } ${idx % 7 === 6 ? 'border-r-0' : ''} ${
                 selectedDate && isSameDay(day, selectedDate) ? 'bg-blue-50 border-2 border-blue-200 shadow-inner' : ''
               }`}
             >
-              <div className="flex justify-between items-start mb-1">
-                <span className={`text-sm font-bold ${
+              {/* Shift background Layer */}
+              {(() => {
+                const shift = getShiftForDay(day, shifts, cycle, overrides);
+                if (!shift) return null;
+                return (
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-[0.1]" 
+                    style={{ backgroundColor: shift.color }}
+                  />
+                );
+              })()}
+
+              <div className="flex justify-between items-start mb-1 relative z-10">
+                <span className={`text-sm font-semibold ${
                   isToday(day) ? 'bg-blue-600 text-white w-7 h-7 flex items-center justify-center rounded-full shadow-lg shadow-blue-200' : 
                   isCurrentMonth ? 'text-gray-900' : 'text-gray-300'
                 }`}>
                   {format(day, 'd')}
                 </span>
+
+                {/* Shift Indicator Letter */}
+                {(() => {
+                  const shift = getShiftForDay(day, shifts, cycle, overrides);
+                  if (!shift) return null;
+                  return (
+                    <span 
+                      className="text-[10px] font-black px-1.5 py-1 rounded leading-none"
+                      style={{ color: shift.color }}
+                    >
+                      {shift.name}
+                    </span>
+                  );
+                })()}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 relative z-10">
                 {/* Individual transactions (recurring, variable or privacy) */}
                 {individualTxs.map(t => (
                   <div 

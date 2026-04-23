@@ -6,8 +6,12 @@ import { TransactionForm } from './components/TransactionForm';
 import { TransactionList } from './components/TransactionList';
 import { Stats } from './components/Stats';
 import { CalendarView } from './components/CalendarView';
-import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon } from 'lucide-react';
-import { ViewMode, Transaction } from './types';
+import { ShiftConfig } from './components/ShiftConfig';
+import { ShiftLegend } from './components/ShiftLegend';
+import { useWorkShifts } from './hooks/useWorkShifts';
+import { getShiftForDay } from './lib/shiftUtils';
+import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock } from 'lucide-react';
+import { ViewMode, Transaction, WorkShift, ShiftCycle } from './types';
 import { isAfter, isToday, addDays, format, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -26,7 +30,13 @@ export default function App() {
     addTransaction, deleteTransaction, deleteTransactionSeries, updateTransaction, 
     resetMonthTransactions, resetAllTransactions, createGroup 
   } = useFinance(profile?.groupId || null);
+
+  const {
+    shifts, cycle, overrides, saveShift, deleteShift, saveCycle, saveOverride
+  } = useWorkShifts(profile?.groupId || null);
+
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
+  const [isShiftConfigOpen, setIsShiftConfigOpen] = useState(false);
   const [summaryMonth, setSummaryMonth] = useState(new Date());
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -184,6 +194,15 @@ export default function App() {
               </button>
             </div>
 
+            <button
+               onClick={() => setIsShiftConfigOpen(true)}
+               className="p-2 border border-gray-100 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2"
+               title="Configura Turni"
+            >
+              <Clock size={20} />
+              <span className="hidden sm:inline text-xs font-bold">Turni</span>
+            </button>
+
             <div className="hidden md:flex items-center gap-2 pr-4 border-r border-gray-100 ml-2">
               <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-gray-100" referrerPolicy="no-referrer" alt="" />
             </div>
@@ -236,9 +255,12 @@ export default function App() {
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8">
+              <div className="lg:col-span-8 space-y-4">
                 <CalendarView 
                   transactions={transactions} 
+                  shifts={shifts}
+                  cycle={cycle}
+                  overrides={overrides}
                   selectedDate={selectedDate}
                   initialMonth={summaryMonth}
                   onMonthChange={(date) => setSummaryMonth(date)}
@@ -264,6 +286,7 @@ export default function App() {
                     }
                   }} 
                 />
+                <ShiftLegend shifts={shifts} cycle={cycle} />
               </div>
           <div className="lg:col-span-4 space-y-6">
             {/* Reset Data Button UI */}
@@ -341,6 +364,54 @@ export default function App() {
                   )}
                </div>
                
+                {selectedDate && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-xl shadow-sm text-blue-600">
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Turno di oggi</p>
+                        <p className="text-sm font-bold text-gray-900">
+                          {getShiftForDay(selectedDate, shifts, cycle, overrides)?.name || 'Nessuno'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
+                      <button 
+                        onClick={() => saveOverride({ date: selectedDate, shiftId: null })}
+                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[8px] font-black transition-all ${
+                          !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 text-gray-400'
+                        }`}
+                        title="Rimuovi turno"
+                      >
+                        OFF
+                      </button>
+                      {shifts.map(s => {
+                        const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
+                        const isSelected = currentShift?.id === s.id;
+                        return (
+                          <button 
+                            key={s.id}
+                            onClick={() => saveOverride({ date: selectedDate, shiftId: s.id })}
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all ${
+                              isSelected ? 'scale-110 shadow-sm' : 'opacity-60'
+                            }`}
+                            style={{ 
+                              backgroundColor: s.color, 
+                              color: 'white',
+                              borderColor: isSelected ? 'white' : 'transparent'
+                            }}
+                          >
+                            {s.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+               
                {editingTransaction ? (
                  <div className="animate-in fade-in slide-in-from-right-4">
                    <TransactionForm 
@@ -396,6 +467,17 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {isShiftConfigOpen && (
+        <ShiftConfig 
+          shifts={shifts}
+          cycle={cycle}
+          onSaveShift={saveShift}
+          onDeleteShift={deleteShift}
+          onSaveCycle={saveCycle}
+          onClose={() => setIsShiftConfigOpen(false)}
+        />
+      )}
     </div>
   );
 }

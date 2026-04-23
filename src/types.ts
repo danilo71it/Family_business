@@ -40,6 +40,22 @@ export interface FamilyGroup {
   members: string[]; // array of uids
 }
 
+export interface WorkShift {
+  id: string;
+  name: string; // e.g., M, P, N, R
+  color: string; // hex color
+}
+
+export interface ShiftCycle {
+  shiftIds: string[]; // sequence of shifts (references to WorkShift.id)
+  startDate: Date; // when the cycle starts
+}
+
+export interface ShiftOverride {
+  date: Date;
+  shiftId: string | null; // null if specifically no shift
+}
+
 export interface Category {
   id: string;
   name: string;

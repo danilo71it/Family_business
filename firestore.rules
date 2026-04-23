@@ -82,6 +82,24 @@ service cloud.firestore {
         allow update: if isGroupMember(groupId) && isValidTransaction(incoming());
         allow delete: if isGroupMember(groupId);
       }
+
+      // Shifts definition
+      match /shifts/{shiftId} {
+        allow read: if isGroupMember(groupId);
+        allow write: if isGroupMember(groupId);
+      }
+
+      // Shift Cycle config
+      match /config/shiftCycle {
+        allow read: if isGroupMember(groupId);
+        allow write: if isGroupMember(groupId);
+      }
+
+      // Shift Overrides
+      match /shiftOverrides/{overrideId} {
+        allow read: if isGroupMember(groupId);
+        allow write: if isGroupMember(groupId);
+      }
     }
   }
 }

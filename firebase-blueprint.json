@@ -48,6 +48,37 @@
         "members": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["name", "ownerId"]
+    },
+    "WorkShift": {
+      "title": "WorkShift",
+      "description": "Definition of a shift type",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["name", "color"]
+    },
+    "ShiftCycle": {
+      "title": "ShiftCycle",
+      "description": "The sequence and start date of shifts",
+      "type": "object",
+      "properties": {
+        "shiftIds": { "type": "array", "items": { "type": "string" } },
+        "startDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["shiftIds", "startDate"]
+    },
+    "ShiftOverride": {
+      "title": "ShiftOverride",
+      "description": "Manual override for a specific day's shift",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "shiftId": { "type": "string" }
+      },
+      "required": ["date"]
     }
   },
   "firestore": {
@@ -62,6 +93,18 @@
     "groups/{groupId}/transactions/{transactionId}": {
       "schema": "Transaction",
       "description": "Ledger entries for a specific group"
+    },
+    "groups/{groupId}/shifts/{shiftId}": {
+      "schema": "WorkShift",
+      "description": "Shift definitions for the group"
+    },
+    "groups/{groupId}/config/shiftCycle": {
+      "schema": "ShiftCycle",
+      "description": "The shift cycle configuration"
+    },
+    "groups/{groupId}/shiftOverrides/{overrideId}": {
+      "schema": "ShiftOverride",
+      "description": "Manual shift overrides"
     }
   }
 }
