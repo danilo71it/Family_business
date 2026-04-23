@@ -64,8 +64,9 @@ export function CalendarView({
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-50">
-        <h2 className="text-3xl sm:text-5xl font-serif text-gray-900 mb-1 tracking-tight capitalize">
-          {format(currentMonth, 'MMMM yyyy', { locale: it })}
+        <h2 className="text-3xl sm:text-5xl font-serif text-gray-900 mb-1 tracking-tight capitalize flex items-baseline gap-2">
+          {format(currentMonth, 'MMMM', { locale: it })}
+          <span className="text-xl sm:text-2xl opacity-40 font-sans font-normal lowercase">{format(currentMonth, 'yyyy', { locale: it })}</span>
         </h2>
         <div className="flex gap-2">
           <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
