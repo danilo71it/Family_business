@@ -10,7 +10,7 @@ import { ShiftConfig } from './components/ShiftConfig';
 import { ShiftLegend } from './components/ShiftLegend';
 import { useWorkShifts } from './hooks/useWorkShifts';
 import { getShiftForDay } from './lib/shiftUtils';
-import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock } from 'lucide-react';
+import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock, Settings, RefreshCw } from 'lucide-react';
 import { ViewMode, Transaction, WorkShift, ShiftCycle } from './types';
 import { isAfter, isToday, addDays, format, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -32,11 +32,12 @@ export default function App() {
   } = useFinance(profile?.groupId || null);
 
   const {
-    shifts, cycle, overrides, saveShift, deleteShift, saveCycle, saveOverride
+    shifts, cycle, overrides, saveShift, deleteShift, saveCycle, saveOverride, resetWorkShifts
   } = useWorkShifts(profile?.groupId || null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [isShiftConfigOpen, setIsShiftConfigOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [summaryMonth, setSummaryMonth] = useState(new Date());
   const [groupName, setGroupName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -204,6 +205,14 @@ export default function App() {
               <span className="hidden sm:inline text-xs font-bold">Turni</span>
             </button>
 
+            <button
+               onClick={() => setIsSettingsOpen(true)}
+               className="p-2 border border-gray-100 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+               title="Strumenti"
+            >
+              <Settings size={20} />
+            </button>
+
             <div className="hidden md:flex items-center gap-2 pr-4 border-r border-gray-100 ml-2">
               <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-gray-100" referrerPolicy="no-referrer" alt="" />
             </div>
@@ -249,7 +258,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-12 space-y-6">
                 <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Registro Transazioni</h2>
-                <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} />
+                <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} onEdit={(t) => { setEditingTransaction(t); setSelectedDate(t.date); setViewMode('calendar'); setTimeout(scrollToForm, 100); }} />
               </div>
             </div>
           </div>
@@ -350,10 +359,10 @@ export default function App() {
               </div>
             </div>
 
-            <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none">
+            <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none h-fit">
                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                    {editingTransaction ? 'Modifica Transazione' : (selectedDate ? (isAddingTransaction ? `Nuova Voce - ${format(selectedDate, 'dd MMM', { locale: it })}` : `Registro - ${format(selectedDate, 'dd MMM', { locale: it })}`) : 'Nuova Transazione')}
+                    {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: it }) : 'Nuova Transazione'}
                   </h2>
                   {(selectedDate || editingTransaction) && (
                     <button 
@@ -366,55 +375,57 @@ export default function App() {
                </div>
                
                 {selectedDate && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-xl shadow-sm text-blue-600">
-                        <Clock size={16} />
+                  <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-xl shadow-sm text-blue-600">
+                          <Clock size={16} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Turno</p>
+                          <p className="text-sm font-bold text-gray-900">
+                            {getShiftForDay(selectedDate, shifts, cycle, overrides)?.label || getShiftForDay(selectedDate, shifts, cycle, overrides)?.name || 'Nessuno'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Turno di oggi</p>
-                        <p className="text-sm font-bold text-gray-900">
-                          {getShiftForDay(selectedDate, shifts, cycle, overrides)?.name || 'Nessuno'}
-                        </p>
+                      
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={async () => {
+                             await saveOverride({ date: selectedDate, shiftId: null });
+                             setSelectedDate(null);
+                          }}
+                          className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[8px] font-black transition-all ${
+                            !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 text-gray-400'
+                          }`}
+                          title="Rimuovi turno"
+                        >
+                          OFF
+                        </button>
+                        {shifts.map(s => {
+                          const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
+                          const isSelected = currentShift?.id === s.id;
+                          return (
+                            <button 
+                              key={s.id}
+                              onClick={async () => {
+                                await saveOverride({ date: selectedDate, shiftId: s.id });
+                                setSelectedDate(null);
+                              }}
+                              className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all ${
+                                isSelected ? 'scale-110 shadow-sm' : 'opacity-60'
+                              }`}
+                              style={{ 
+                                backgroundColor: s.color, 
+                                color: 'white',
+                                borderColor: isSelected ? 'white' : 'transparent'
+                              }}
+                            >
+                              {s.name}
+                            </button>
+                          );
+                        })}
                       </div>
-                    </div>
-                    
-                    <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
-                      <button 
-                        onClick={async () => {
-                           await saveOverride({ date: selectedDate, shiftId: null });
-                           setSelectedDate(null);
-                        }}
-                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[8px] font-black transition-all ${
-                          !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 text-gray-400'
-                        }`}
-                        title="Rimuovi turno"
-                      >
-                        OFF
-                      </button>
-                      {shifts.map(s => {
-                        const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
-                        const isSelected = currentShift?.id === s.id;
-                        return (
-                          <button 
-                            key={s.id}
-                            onClick={async () => {
-                              await saveOverride({ date: selectedDate, shiftId: s.id });
-                              setSelectedDate(null);
-                            }}
-                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all ${
-                              isSelected ? 'scale-110 shadow-sm' : 'opacity-60'
-                            }`}
-                            style={{ 
-                              backgroundColor: s.color, 
-                              color: 'white',
-                              borderColor: isSelected ? 'white' : 'transparent'
-                            }}
-                          >
-                            {s.name}
-                          </button>
-                        );
-                      })}
                     </div>
                   </div>
                 )}
@@ -474,6 +485,86 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Strumenti</h2>
+                <p className="text-xs text-gray-500">Gestione e manutenzione dati</p>
+              </div>
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">Azzeramento Dati</h3>
+                
+                <button 
+                  onClick={async () => {
+                    if (window.confirm(`Sei sicuro di voler eliminare TUTTE le transazioni di ${format(summaryMonth, 'MMMM yyyy', { locale: it })}?`)) {
+                      await resetMonthTransactions(summaryMonth);
+                      setIsSettingsOpen(false);
+                    }
+                  }}
+                  className="w-full p-4 bg-gray-50 hover:bg-amber-50 text-amber-600 rounded-2xl border border-gray-100 hover:border-amber-200 transition-all flex items-center gap-4 text-left"
+                >
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <Trash2 size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Azzera mese corrente</p>
+                    <p className="text-[10px] font-medium opacity-60">Elimina le spese di questo mese</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={async () => {
+                    if (window.confirm('ATTENZIONE: Sei sicuro di voler eliminare TUTTE le transazioni mai inserite? L\'azione è irreversibile.')) {
+                      await resetAllTransactions();
+                      setIsSettingsOpen(false);
+                    }
+                  }}
+                  className="w-full p-4 bg-gray-50 hover:bg-red-50 text-red-600 rounded-2xl border border-gray-100 hover:border-red-200 transition-all flex items-center gap-4 text-left"
+                >
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <AlertIcon size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Azzera tutto lo storico</p>
+                    <p className="text-[10px] font-medium opacity-60">Elimina ogni transazione inserita</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={async () => {
+                    if (window.confirm('Vuoi azzerare la configurazione dei turni? I tipi di turno rimarranno, ma verranno cancellati il ciclo e tutti i cambi manuali.')) {
+                      await resetWorkShifts();
+                      setIsSettingsOpen(false);
+                    }
+                  }}
+                  className="w-full p-4 bg-gray-50 hover:bg-purple-50 text-purple-600 rounded-2xl border border-gray-100 hover:border-purple-200 transition-all flex items-center gap-4 text-left"
+                >
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <RefreshCw size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Azzera dati turni</p>
+                    <p className="text-[10px] font-medium opacity-60">Resetta cicli e cambi manuali</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gray-50 border-t border-gray-100 text-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase font-mono">Gruppo: {profile?.groupId}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isShiftConfigOpen && (
         <ShiftConfig 

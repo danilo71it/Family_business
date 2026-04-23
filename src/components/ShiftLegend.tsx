@@ -34,8 +34,7 @@ export function ShiftLegend({ shifts, cycle, overrides = [] }: Props) {
                 style={{ backgroundColor: shift.color }}
               />
               <span className="text-xs font-semibold text-gray-600">
-                <span className="font-black mr-1" style={{ color: shift.color }}>{shift.name}</span>
-                {shift.label}
+                {shift.label || shift.name}
               </span>
             </div>
           ))}

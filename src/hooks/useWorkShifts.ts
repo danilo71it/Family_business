@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { 
   collection, query, onSnapshot, 
-  setDoc, doc, Timestamp, deleteDoc
+  setDoc, doc, Timestamp, deleteDoc, getDocs, writeBatch
 } from 'firebase/firestore';
 import { WorkShift, ShiftCycle, ShiftOverride } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
@@ -119,5 +119,23 @@ export function useWorkShifts(groupId: string | null) {
     }
   };
 
-  return { shifts, cycle, overrides, loading, saveShift, deleteShift, saveCycle, saveOverride };
+  const resetWorkShifts = async () => {
+    if (!groupId) return;
+    try {
+      const cleanGroupId = groupId.trim();
+      const overridesRef = collection(db, 'groups', cleanGroupId, 'shiftOverrides');
+      const snapshot = await getDocs(overridesRef);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => batch.delete(d.ref));
+      
+      const cycleRef = doc(db, 'groups', cleanGroupId, 'config', 'shiftCycle');
+      batch.delete(cycleRef);
+      
+      await batch.commit();
+    } catch (err) {
+      handleFirestoreError(err, 'delete', `groups/${groupId}/shifts/reset`);
+    }
+  };
+
+  return { shifts, cycle, overrides, loading, saveShift, deleteShift, saveCycle, saveOverride, resetWorkShifts };
 }

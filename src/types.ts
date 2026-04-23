@@ -21,6 +21,7 @@ export interface Transaction {
   groupId: string;
   createdAt: Date;
   updatedAt: Date;
+  note?: string; 
   
   // New fields
   isEstimate: boolean; // variabile vs certa

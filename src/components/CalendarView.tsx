@@ -191,16 +191,8 @@ export function CalendarView({
                   )}
                 </div>
                 
-                {/* Visual indicator for alerts */}
+                {/* Visual indicator for alerts REMOVED as requested */}
                 <div className="flex gap-1 mt-1">
-                  {dayTransactions.some(t => t.reminderEnabled) && (
-                    <div 
-                      className="text-purple-400 p-0.5" 
-                      title="Contiene scadenze con alert attivo" 
-                    >
-                      <Bell size={10} />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

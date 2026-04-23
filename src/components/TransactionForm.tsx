@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff, StickyNote } from 'lucide-react';
 import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
 
@@ -17,6 +17,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const [amount, setAmount] = useState(initialData?.amount.toString() || '');
   const [type, setType] = useState<TransactionType>(initialData?.type || 'expense');
   const [category, setCategory] = useState(initialData?.category || '');
+  const [note, setNote] = useState(initialData?.note || '');
   const [date, setDate] = useState(initialData ? format(initialData.date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
   
   // Update state when initialData or defaultDate changes
@@ -25,6 +26,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       setAmount(initialData.amount.toString());
       setType(initialData.type);
       setCategory(initialData.category);
+      setNote(initialData.note || '');
       setDate(format(initialData.date, 'yyyy-MM-dd'));
       setIsEstimate(initialData.isEstimate || false);
       setRecurring(initialData.recurring || false);
@@ -115,6 +117,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       type,
       category: category.trim(),
       description: '',
+      note: note.trim(),
       date: selectedDate,
       userId,
       isEstimate: !!(recurring ? isEstimate : false),
@@ -197,7 +200,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               onFocus={(e) => e.target.select()}
-              placeholder="Esempio: Assicurazione Auto, Stipendio..."
+              placeholder=""
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
               required
             />
@@ -372,6 +375,20 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           </button>
         </div>
       )}
+
+      <div className="space-y-1">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Note</label>
+        <div className="relative">
+          <StickyNote size={18} className="absolute left-4 top-3 text-gray-400" />
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Aggiungi appunti per questo giorno..."
+            rows={3}
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium resize-none"
+          />
+        </div>
+      </div>
 
       <div className="flex gap-4">
         <button

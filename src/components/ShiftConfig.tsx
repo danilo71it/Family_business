@@ -27,7 +27,7 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
     { id: 'preset-p', name: 'P', label: 'Pomeriggio', color: '#06b6d4' },
     { id: 'preset-n', name: 'N', label: 'Notte', color: '#8b5cf6' },
     { id: 'preset-r', name: 'R', label: 'Riposo', color: '#94a3b8' },
-    { id: 'preset-x', name: 'X', label: 'Chiusura aziendale', color: '#64748b' },
+    { id: 'preset-c', name: 'C', label: 'Chiusura aziendale', color: '#64748b' },
   ];
 
   const handleAddShiftToCycle = (id: string) => {
@@ -83,7 +83,7 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                     {s.name}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-900 truncate">{s.label || `Turno ${s.name}`}</p>
+                    <p className="text-xs font-bold text-gray-900 truncate">{s.label || s.name}</p>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onDeleteShift(s.id); }}
