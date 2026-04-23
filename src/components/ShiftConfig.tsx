@@ -65,9 +65,16 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">1. Tipi di Turno</h3>
                 <button 
-                  onClick={() => {
-                    if (window.confirm('Vuoi caricare i turni predefiniti? Questi sovrascriveranno o integreranno i turni con sigla M, P, N, R, C.')) {
-                      DEFAULT_PRESETS.forEach(p => onSaveShift(p));
+                  onClick={async () => {
+                    if (window.confirm('Vuoi caricare i turni predefiniti? Tutti i turni esistenti verranno eliminati e sostituiti con la configurazione standard.')) {
+                      // Delete existing
+                      for (const s of shifts) {
+                        await onDeleteShift(s.id);
+                      }
+                      // Load defaults
+                      for (const p of DEFAULT_PRESETS) {
+                        await onSaveShift(p);
+                      }
                     }
                   }}
                   className="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 hover:bg-blue-100 rounded-lg transition-all"
@@ -87,7 +94,6 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                     {s.name}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter leading-none mb-0.5">Nome</p>
                     <p className="text-xs font-bold text-gray-900 uppercase truncate">{s.label || s.name}</p>
                   </div>
                   <button 
