@@ -77,7 +77,11 @@ export function useWorkShifts(groupId: string | null) {
     if (!groupId) return;
     try {
       const shiftRef = doc(db, 'groups', groupId.trim(), 'shifts', shift.id);
-      await setDoc(shiftRef, { name: shift.name, color: shift.color });
+      await setDoc(shiftRef, { 
+        name: shift.name, 
+        label: shift.label || '',
+        color: shift.color 
+      });
     } catch (err) {
       handleFirestoreError(err, 'create', `groups/${groupId}/shifts/${shift.id}`);
     }

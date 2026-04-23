@@ -64,13 +64,17 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">1. Tipi di Turno</h3>
-              <button 
-                onClick={() => setEditingShift({ id: Math.random().toString(36).substr(2, 9), name: '', color: PRESET_COLORS[0] })}
-                className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-lg"
-              >
-                <Plus size={14} /> Nuovo
-              </button>
-            </div>
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Vuoi caricare i turni predefiniti? Questi sovrascriveranno o integreranno i turni con sigla M, P, N, R, C.')) {
+                      DEFAULT_PRESETS.forEach(p => onSaveShift(p));
+                    }
+                  }}
+                  className="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 hover:bg-blue-100 rounded-lg transition-all"
+                >
+                  CARICA PREDEFINITI
+                </button>
+              </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {shifts.map(s => (
@@ -79,10 +83,11 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                   className="group relative flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all cursor-pointer"
                   onClick={() => setEditingShift(s)}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm" style={{ backgroundColor: s.color, color: 'white' }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black shadow-sm shrink-0" style={{ backgroundColor: s.color, color: 'white' }}>
                     {s.name}
                   </div>
                   <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter leading-none mb-0.5">Nome</p>
                     <p className="text-xs font-bold text-gray-900 uppercase truncate">{s.label || s.name}</p>
                   </div>
                   <button 
@@ -93,16 +98,14 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
                   </button>
                 </div>
               ))}
-              {shifts.length === 0 && (
-                <button 
-                  onClick={() => {
-                    DEFAULT_PRESETS.forEach(p => onSaveShift(p));
-                  }}
-                  className="col-span-full py-3 bg-blue-50 border border-dashed border-blue-200 rounded-2xl text-xs font-bold text-blue-600 hover:bg-blue-100 transition-all"
-                >
-                  Carica Turni Predefiniti (M, P, N, R, C)
-                </button>
-              )}
+              
+              <button 
+                onClick={() => setEditingShift({ id: Math.random().toString(36).substr(2, 9), name: '', color: PRESET_COLORS[0] })}
+                className="flex flex-col items-center justify-center gap-1 p-3 bg-white border border-dashed border-gray-200 rounded-2xl text-blue-600 hover:bg-blue-50 transition-all"
+              >
+                <Plus size={16} />
+                <span className="text-[10px] font-bold uppercase">Nuovo</span>
+              </button>
             </div>
 
             {editingShift && (

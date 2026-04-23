@@ -350,7 +350,7 @@ export default function App() {
                                   }}
                                   title={s.label || s.name}
                                 >
-                                  {s.name.charAt(0).toUpperCase()}
+                                  {s.name}
                                 </button>
                               );
                             })}
