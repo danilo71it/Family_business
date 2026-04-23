@@ -207,7 +207,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Importo</label>
             <div className="relative">
@@ -231,50 +231,11 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               />
             </div>
           </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Data</label>
-            <div className="relative">
-              <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
       <div className="space-y-4 pt-2 border-t border-gray-50">
         <div className="flex flex-wrap gap-2">
-          {/* Recurring Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setRecurring(!recurring)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
-              recurring ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-            }`}
-          >
-            <Repeat size={14} />
-            Transazione Ricorrente
-          </button>
-
-          {/* Conditional Estimate Toggle Button - Only shown if recurring is ON */}
-          {recurring && (
-            <button
-              type="button"
-              onClick={() => setIsEstimate(!isEstimate)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
-                isEstimate ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-              }`}
-            >
-              <AlertCircle size={14} />
-              Importo Variabile
-            </button>
-          )}
-
           {/* Privacy Toggle Button */}
           <button
             type="button"
@@ -316,6 +277,32 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             <Bell size={14} />
             Remind
           </button>
+
+          {/* Recurring Toggle Button - Moved to last */}
+          <button
+            type="button"
+            onClick={() => setRecurring(!recurring)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
+              recurring ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            <Repeat size={14} />
+            Transazione Ricorrente
+          </button>
+
+          {/* Conditional Estimate Toggle Button - Only shown if recurring is ON */}
+          {recurring && (
+            <button
+              type="button"
+              onClick={() => setIsEstimate(!isEstimate)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
+                isEstimate ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+              }`}
+            >
+              <AlertCircle size={14} />
+              Importo Variabile
+            </button>
+          )}
         </div>
       </div>
 

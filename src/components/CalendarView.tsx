@@ -136,7 +136,7 @@ export function CalendarView({
                     {format(day, 'd')}
                   </span>
                   {holiday && (
-                    <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter leading-none">
+                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter leading-none">
                       FESTIVO
                     </span>
                   )}

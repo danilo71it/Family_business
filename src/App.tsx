@@ -298,189 +298,117 @@ export default function App() {
                 />
                 <ShiftLegend shifts={shifts} cycle={cycle} overrides={overrides} />
               </div>
-          <div className="lg:col-span-4 space-y-6">
-            {/* Reset Data Button UI */}
-            <div className={`p-4 rounded-2xl border transition-all ${
-              resetConfig.step === 0 ? 'bg-white border-gray-100' : 
-              resetConfig.step === 1 ? 'bg-amber-50 border-amber-200' : 
-              'bg-red-50 border-red-200 shadow-md animate-pulse'
-            }`}>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-gray-400">Strumenti</p>
-                    <p className="text-xs font-bold text-gray-700">
-                      {resetConfig.step === 0 ? 'Gestione Dati' : 
-                       resetConfig.step === 1 ? 'Cosa vuoi azzerare?' : 
-                       `CONFERMA: Azzera ${resetConfig.type === 'month' ? 'questo mese' : 'TUTTO'}?`}
-                    </p>
-                  </div>
-                  {resetConfig.step > 0 && (
-                    <button 
-                      onClick={() => setResetConfig({ step: 0, type: null })}
-                      className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
 
-                {resetConfig.step === 0 ? (
-                  <button
-                    onClick={handleReset}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-xl text-xs font-bold transition-all"
-                  >
-                    <Trash2 size={14} />
-                    Azzera Dati
-                  </button>
-                ) : resetConfig.step === 1 ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setResetConfig({ step: 2, type: 'month' })}
-                      className="py-2 bg-white border border-amber-200 text-amber-600 rounded-xl text-[10px] font-bold hover:bg-amber-100 transition-all uppercase"
-                    >
-                      Mese Corrente
-                    </button>
-                    <button
-                      onClick={() => setResetConfig({ step: 2, type: 'all' })}
-                      className="py-2 bg-white border border-red-200 text-red-600 rounded-xl text-[10px] font-bold hover:bg-red-100 transition-all uppercase"
-                    >
-                      Tutti i Dati
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleReset}
-                    className="w-full py-3 bg-red-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-100 uppercase tracking-widest"
-                  >
-                    Conferma Cancellazione
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none h-fit">
-               <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                    {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: it }) : 'Nuova Transazione'}
-                  </h2>
-                  {(selectedDate || editingTransaction) && (
-                    <button 
-                      onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); setEditingTransaction(null); }} 
-                      className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-               </div>
-               
-                {selectedDate && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-xl shadow-sm text-blue-600">
-                          <Clock size={16} />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Turno</p>
-                          <p className="text-sm font-bold text-gray-900">
-                            {getShiftForDay(selectedDate, shifts, cycle, overrides)?.label || getShiftForDay(selectedDate, shifts, cycle, overrides)?.name || 'Nessuno'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-1">
-                        <button 
-                          onClick={async () => {
-                             await saveOverride({ date: selectedDate, shiftId: null });
-                             setSelectedDate(null);
-                          }}
-                          className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[8px] font-black transition-all ${
-                            !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 text-gray-400'
-                          }`}
-                          title="Rimuovi turno"
-                        >
-                          OFF
-                        </button>
-                        {shifts.map(s => {
-                          const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
-                          const isSelected = currentShift?.id === s.id;
-                          return (
-                            <button 
-                              key={s.id}
-                              onClick={async () => {
-                                await saveOverride({ date: selectedDate, shiftId: s.id });
-                                setSelectedDate(null);
-                              }}
-                              className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all ${
-                                isSelected ? 'scale-110 shadow-sm' : 'opacity-60'
-                              }`}
-                              style={{ 
-                                backgroundColor: s.color, 
-                                color: 'white',
-                                borderColor: isSelected ? 'white' : 'transparent'
-                              }}
-                            >
-                              {s.name}
-                            </button>
-                          );
-                        })}
-                      </div>
+              <div className="lg:col-span-4 space-y-6">
+                {(selectedDate || editingTransaction) && (
+                  <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none h-fit animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                        {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: it }) : 'Nuova Transazione'}
+                      </h2>
+                      <button 
+                        onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); setEditingTransaction(null); }} 
+                        className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
-                  </div>
-                )}
-               
-               {editingTransaction ? (
-                 <div className="animate-in fade-in slide-in-from-right-4">
-                   <TransactionForm 
-                     onAdd={async (t) => { await addTransaction(t); setEditingTransaction(null); }} 
-                     onUpdate={async (id, t) => { await updateTransaction(id, t); setEditingTransaction(null); }}
-                     onDelete={async (id) => { await deleteTransaction(id); setEditingTransaction(null); }}
-                     onDeleteSeries={async (pid) => { await deleteTransactionSeries(pid); setEditingTransaction(null); }}
-                     userId={user.uid} 
-                     initialData={editingTransaction} 
-                   />
-                   <button 
-                    onClick={() => setEditingTransaction(null)}
-                    className="w-full mt-4 py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all border border-transparent hover:border-gray-100"
-                  >
-                    Annulla Modifica
-                  </button>
-                 </div>
-               ) : selectedDate ? (
-                 <div className="space-y-4">
-                    {isAddingTransaction ? (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-                        <TransactionForm onAdd={async (t) => { await addTransaction(t); setIsAddingTransaction(false); }} userId={user.uid} defaultDate={selectedDate} />
-                        <button 
-                          onClick={() => setIsAddingTransaction(false)}
-                          className="w-full py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all"
-                        >
-                          Annulla
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
-                        <TransactionList 
-                          transactions={filteredTransactionsByDate} 
-                          onDelete={deleteTransaction}
-                          onEdit={(t) => setEditingTransaction(t)}
-                        />
-                        <button 
-                          onClick={() => setIsAddingTransaction(true)}
-                          className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 active:scale-95"
-                        >
-                          <Plus size={18} />
-                          Aggiungi per il {format(selectedDate, 'd MMM', { locale: it })}
-                        </button>
+                    
+                    {selectedDate && (
+                      <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-4">
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">TURNI</label>
+                          <div className="flex flex-wrap gap-2">
+                            <button 
+                              onClick={async () => {
+                                 await saveOverride({ date: selectedDate, shiftId: null });
+                                 setIsAddingTransaction(false);
+                              }}
+                              className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center text-[10px] font-black transition-all ${
+                                !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-red-500 bg-white text-red-500 ring-2 ring-red-100 shadow-sm' : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300'
+                              }`}
+                              title="Nessun turno / Riposo"
+                            >
+                              OFF
+                            </button>
+                            {shifts.map(s => {
+                              const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
+                              const isSelected = currentShift?.id === s.id;
+                              return (
+                                <button 
+                                  key={s.id}
+                                  onClick={async () => {
+                                    await saveOverride({ date: selectedDate, shiftId: s.id });
+                                    setSelectedDate(null);
+                                  }}
+                                  className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center text-[10px] font-black transition-all shadow-sm ${
+                                    isSelected ? 'border-red-500 ring-2 ring-red-100 scale-105 z-10' : 'border-transparent opacity-80'
+                                  }`}
+                                  style={{ 
+                                    backgroundColor: s.color, 
+                                    color: 'white',
+                                  }}
+                                  title={s.label || s.name}
+                                >
+                                  {s.name.charAt(0).toUpperCase()}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
-                 </div>
-               ) : (
-                 <TransactionForm onAdd={addTransaction} userId={user.uid} />
-               )}
-            </div>
-          </div>
+                   
+                    {editingTransaction ? (
+                      <div className="animate-in fade-in slide-in-from-right-4">
+                        <TransactionForm 
+                          onAdd={async (t) => { await addTransaction(t); setEditingTransaction(null); }} 
+                          onUpdate={async (id, t) => { await updateTransaction(id, t); setEditingTransaction(null); }}
+                          onDelete={async (id) => { await deleteTransaction(id); setEditingTransaction(null); }}
+                          onDeleteSeries={async (pid) => { await deleteTransactionSeries(pid); setEditingTransaction(null); }}
+                          userId={user.uid} 
+                          initialData={editingTransaction} 
+                        />
+                        <button 
+                          onClick={() => setEditingTransaction(null)}
+                          className="w-full mt-4 py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all"
+                        >
+                          Annulla Modifica
+                        </button>
+                      </div>
+                    ) : selectedDate ? (
+                      <div className="space-y-4">
+                        {isAddingTransaction ? (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                            <TransactionForm onAdd={async (t) => { await addTransaction(t); setIsAddingTransaction(false); }} userId={user.uid} defaultDate={selectedDate} />
+                            <button 
+                              onClick={() => setIsAddingTransaction(false)}
+                              className="w-full py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all font-mono"
+                            >
+                              Annulla
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
+                            <TransactionList 
+                              transactions={filteredTransactionsByDate} 
+                              onDelete={deleteTransaction}
+                              onEdit={(t) => setEditingTransaction(t)}
+                            />
+                            <button 
+                              onClick={() => setIsAddingTransaction(true)}
+                              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 active:scale-95"
+                            >
+                              <Plus size={18} />
+                              Aggiungi per il {format(selectedDate, 'd MMM', { locale: it })}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { Trash2, TrendingDown, TrendingUp, AlertCircle, Repeat } from 'lucide-react';
+import { Trash2, TrendingDown, TrendingUp, AlertCircle, Repeat, Pencil } from 'lucide-react';
 import { Transaction } from '../types';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -52,12 +52,12 @@ export function TransactionList({ transactions, onDelete, onEdit }: Props) {
             <span className={`font-mono font-semibold text-lg ${t.type === 'income' ? 'text-green-600' : (t.isEstimate || t.isUnknownAmount ? 'text-amber-600' : 'text-gray-900')}`}>
               {t.isUnknownAmount ? (t.description || t.category || 'DA DEFINIRE') : (t.amount === 0 ? '---' : `${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`)}
             </span>
-            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit?.(t); }}
                 className="p-2 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
               >
-                <Repeat size={18} className="rotate-90" />
+                <Pencil size={18} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}
