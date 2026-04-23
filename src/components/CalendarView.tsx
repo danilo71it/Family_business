@@ -63,12 +63,12 @@ export function CalendarView({
   return (
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between p-6 sm:p-10 border-b border-gray-50">
-        <div className="flex items-baseline gap-3 sm:gap-6">
-          <h2 className="text-5xl sm:text-8xl font-serif text-brand-blue tracking-tighter capitalize leading-none">
+      <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-50">
+        <div className="flex items-baseline gap-2 sm:gap-3">
+          <h2 className="text-3xl sm:text-4xl font-serif text-brand-blue tracking-tight capitalize leading-none">
             {format(currentMonth, 'MMMM', { locale: it })}
           </h2>
-          <span className="text-xl sm:text-4xl font-sans font-light text-gray-900 tracking-tight">
+          <span className="text-xl sm:text-2xl font-sans font-light text-gray-400 tracking-tight">
             {format(currentMonth, 'yyyy', { locale: it })}
           </span>
         </div>
