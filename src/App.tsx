@@ -161,13 +161,10 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-2 sm:px-6 py-3 sm:py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex flex-col items-start leading-none">
-              <span className="font-serif text-4xl text-blue-900 mb-1 tracking-tight">Family</span>
-              <span className="text-[8px] font-bold text-gray-400 uppercase tracking-[0.3em] relative -top-[8px] left-[2px]">BUSINESS</span>
-            </div>
-            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
-              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">{group?.name}</span>
+          <div className="flex items-center shrink-0">
+            <div className="flex flex-col select-none">
+              <span className="font-serif text-5xl sm:text-6xl text-brand-blue -mb-2 tracking-tight">Family</span>
+              <span className="text-[9px] sm:text-[11px] font-sans font-extralight text-gray-900 uppercase tracking-[0.5em] ml-[3px]">BUSINESS</span>
             </div>
           </div>
 
