@@ -43,6 +43,7 @@ export interface FamilyGroup {
 export interface WorkShift {
   id: string;
   name: string; // e.g., M, P, N, R
+  label?: string; // e.g., Mattina, Pomeriggio
   color: string; // hex color
 }
 

@@ -22,6 +22,14 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
   const [tempShiftIds, setTempShiftIds] = useState<string[]>(cycle?.shiftIds || []);
   const [startDate, setStartDate] = useState(cycle ? format(cycle.startDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
 
+  const DEFAULT_PRESETS: WorkShift[] = [
+    { id: 'preset-m', name: 'M', label: 'Mattina', color: '#f59e0b' },
+    { id: 'preset-p', name: 'P', label: 'Pomeriggio', color: '#06b6d4' },
+    { id: 'preset-n', name: 'N', label: 'Notte', color: '#8b5cf6' },
+    { id: 'preset-r', name: 'R', label: 'Riposo', color: '#94a3b8' },
+    { id: 'preset-x', name: 'X', label: 'Chiusura aziendale', color: '#64748b' },
+  ];
+
   const handleAddShiftToCycle = (id: string) => {
     setTempShiftIds([...tempShiftIds, id]);
   };
@@ -68,50 +76,70 @@ export function ShiftConfig({ shifts, cycle, onSaveShift, onDeleteShift, onSaveC
               {shifts.map(s => (
                 <div 
                   key={s.id} 
-                  className="group relative flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all"
+                  className="group relative flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all cursor-pointer"
+                  onClick={() => setEditingShift(s)}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black" style={{ backgroundColor: s.color, color: 'white' }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm" style={{ backgroundColor: s.color, color: 'white' }}>
                     {s.name}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-900 truncate">Turno {s.name}</p>
+                    <p className="text-xs font-bold text-gray-900 truncate">{s.label || `Turno ${s.name}`}</p>
                   </div>
                   <button 
-                    onClick={() => onDeleteShift(s.id)}
+                    onClick={(e) => { e.stopPropagation(); onDeleteShift(s.id); }}
                     className="absolute -top-2 -right-2 p-1 bg-white shadow-sm border border-gray-100 rounded-full text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
               ))}
+              {shifts.length === 0 && (
+                <button 
+                  onClick={() => {
+                    DEFAULT_PRESETS.forEach(p => onSaveShift(p));
+                  }}
+                  className="col-span-full py-3 bg-blue-50 border border-dashed border-blue-200 rounded-2xl text-xs font-bold text-blue-600 hover:bg-blue-100 transition-all"
+                >
+                  Carica Turni Predefiniti (M, P, N, R, X)
+                </button>
+              )}
             </div>
 
             {editingShift && (
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4 animate-in slide-in-from-top-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600 uppercase">Sigla (max 3 lett)</label>
+                    <label className="text-[10px] font-bold text-blue-600 uppercase">Sigla (es. M)</label>
                     <input 
                       type="text" 
                       maxLength={3}
                       value={editingShift.name}
                       onChange={e => setEditingShift({...editingShift, name: e.target.value.toUpperCase()})}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-blue-200 text-sm font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none"
-                      placeholder="M, P, N..."
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-blue-600 uppercase">Colore</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {PRESET_COLORS.map(c => (
-                        <button 
-                          key={c}
-                          onClick={() => setEditingShift({...editingShift, color: c})}
-                          className={`w-5 h-5 rounded-full border-2 transition-all ${editingShift.color === c ? 'border-blue-600 scale-110' : 'border-transparent'}`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                    </div>
+                    <label className="text-[10px] font-bold text-blue-600 uppercase">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      value={editingShift.label || ''}
+                      onChange={e => setEditingShift({...editingShift, label: e.target.value})}
+                      className="w-full px-3 py-2 bg-white rounded-xl border border-blue-200 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="es. Mattina"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-blue-600 uppercase">Colore</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRESET_COLORS.map(c => (
+                      <button 
+                        key={c}
+                        onClick={() => setEditingShift({...editingShift, color: c})}
+                        className={`w-6 h-6 rounded-full border-2 transition-all ${editingShift.color === c ? 'border-blue-600 scale-110 shadow-sm' : 'border-transparent'}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
                   </div>
                 </div>
                 <div className="flex gap-2">

@@ -159,38 +159,40 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-gray-900 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-100">
-              <Wallet size={24} />
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm px-2 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="p-1.5 sm:p-2 bg-blue-600 text-white rounded-lg sm:xl shadow-lg shadow-blue-100 uppercase text-[10px] font-black">
+              FB
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight leading-none">Family business</h1>
-              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{group?.name}</span>
+            <div className="hidden xs:block">
+              <h1 className="text-sm sm:text-lg font-bold tracking-tight leading-none truncate max-w-[80px] sm:max-w-none">Family business</h1>
+              <span className="text-[8px] sm:text-[10px] font-bold text-blue-500 uppercase tracking-widest">{group?.name}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
             {/* View Toggle */}
-            <div className="bg-gray-100 p-1 rounded-xl flex gap-1">
+            <div className="bg-gray-100 p-1 rounded-xl flex gap-1 shrink-0">
               <button
                 onClick={() => setViewMode('calendar')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-sm font-bold transition-all ${
                   viewMode === 'calendar' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <CalendarIcon size={16} />
-                Calendario
+                <CalendarIcon size={14} className="sm:size-4" />
+                <span className="hidden sm:inline">Calendario</span>
+                <span className="sm:hidden uppercase tracking-widest">CAL</span>
               </button>
               <button
                 onClick={() => setViewMode('summary')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-sm font-bold transition-all ${
                   viewMode === 'summary' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <LayoutGrid size={16} />
-                Riepilogo
+                <LayoutGrid size={14} className="sm:size-4" />
+                <span className="hidden sm:inline">Riepilogo</span>
+                <span className="sm:hidden uppercase tracking-widest">STAT</span>
               </button>
             </div>
 
@@ -286,7 +288,7 @@ export default function App() {
                     }
                   }} 
                 />
-                <ShiftLegend shifts={shifts} cycle={cycle} />
+                <ShiftLegend shifts={shifts} cycle={cycle} overrides={overrides} />
               </div>
           <div className="lg:col-span-4 space-y-6">
             {/* Reset Data Button UI */}
@@ -380,7 +382,10 @@ export default function App() {
                     
                     <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
                       <button 
-                        onClick={() => saveOverride({ date: selectedDate, shiftId: null })}
+                        onClick={async () => {
+                           await saveOverride({ date: selectedDate, shiftId: null });
+                           setSelectedDate(null);
+                        }}
                         className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[8px] font-black transition-all ${
                           !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 text-gray-400'
                         }`}
@@ -394,7 +399,10 @@ export default function App() {
                         return (
                           <button 
                             key={s.id}
-                            onClick={() => saveOverride({ date: selectedDate, shiftId: s.id })}
+                            onClick={async () => {
+                              await saveOverride({ date: selectedDate, shiftId: s.id });
+                              setSelectedDate(null);
+                            }}
                             className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-[10px] font-black transition-all ${
                               isSelected ? 'scale-110 shadow-sm' : 'opacity-60'
                             }`}

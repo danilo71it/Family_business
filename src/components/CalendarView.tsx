@@ -8,6 +8,7 @@ import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell } from 'lucide-react';
 import { Transaction, WorkShift, ShiftCycle, ShiftOverride } from '../types';
 import { getShiftForDay } from '../lib/shiftUtils';
+import { isHoliday } from '../lib/holidayUtils';
 
 interface Props {
   transactions: Transaction[];
@@ -95,6 +96,7 @@ export function CalendarView({
           const income = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
           const expense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
           const isCurrentMonth = isSameMonth(day, monthStart);
+          const holiday = isHoliday(day);
 
           // Get variables/estimates or privacy items or unknown amounts
           const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount);
@@ -126,12 +128,19 @@ export function CalendarView({
               })()}
 
               <div className="flex justify-between items-start mb-1 relative z-10">
-                <span className={`text-sm font-semibold ${
-                  isToday(day) ? 'bg-blue-600 text-white w-7 h-7 flex items-center justify-center rounded-full shadow-lg shadow-blue-200' : 
-                  isCurrentMonth ? 'text-gray-900' : 'text-gray-300'
-                }`}>
-                  {format(day, 'd')}
-                </span>
+                <div className="flex flex-col items-start gap-1">
+                  <span className={`text-sm font-semibold ${
+                    isToday(day) ? 'bg-blue-600 text-white w-7 h-7 flex items-center justify-center rounded-full shadow-lg shadow-blue-200' : 
+                    isCurrentMonth ? (holiday ? 'text-red-500' : 'text-gray-900') : 'text-gray-300'
+                  }`}>
+                    {format(day, 'd')}
+                  </span>
+                  {holiday && (
+                    <span className="text-[8px] font-bold text-red-400 uppercase tracking-tighter leading-none max-w-[50px] truncate">
+                      {holiday.name}
+                    </span>
+                  )}
+                </div>
 
                 {/* Shift Indicator Letter */}
                 {(() => {
