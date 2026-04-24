@@ -74,7 +74,7 @@ export function Stats({ transactions }: Props) {
         </p>
       </div>
 
-      <div className={`p-6 rounded-2xl shadow-sm border ${balance >= 0 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-red-600 border-red-700 text-white'}`}>
+      <div className={`p-6 rounded-2xl shadow-sm border transition-colors ${balance >= 0 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-red-600 border-red-700 text-white'}`}>
         <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Bilancio Attuale</p>
         <p className="text-3xl font-mono font-bold">
           {balance.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
@@ -82,20 +82,26 @@ export function Stats({ transactions }: Props) {
       </div>
 
       {charts.length > 0 && (
-        <div className="md:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+        <div className="md:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden outline-none ring-0">
           <div className="flex items-center justify-between mb-4 px-2">
             <h3 className="text-lg font-bold text-gray-800">{charts[chartIndex].title}</h3>
             <div className="flex gap-2">
-              <button onClick={prevChart} className="p-1 hover:bg-gray-50 rounded-full transition-colors text-gray-400">
+              <button 
+                onClick={prevChart} 
+                className="p-1 hover:bg-gray-50 rounded-full transition-colors text-gray-400 outline-none"
+              >
                 <ChevronLeft size={20} />
               </button>
-              <button onClick={nextChart} className="p-1 hover:bg-gray-50 rounded-full transition-colors text-gray-400">
+              <button 
+                onClick={nextChart} 
+                className="p-1 hover:bg-gray-50 rounded-full transition-colors text-gray-400 outline-none"
+              >
                 <ChevronRight size={20} />
               </button>
             </div>
           </div>
 
-          <div className="h-72 relative">
+          <div className="min-h-[320px] sm:min-h-[300px] h-auto relative outline-none">
             <AnimatePresence mode="wait">
               <motion.div
                 key={charts[chartIndex].id}
@@ -103,7 +109,7 @@ export function Stats({ transactions }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                className="w-full h-full"
+                className="w-full h-full outline-none"
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 onDragEnd={(_, info) => {
@@ -111,31 +117,48 @@ export function Stats({ transactions }: Props) {
                   if (info.offset.x > 50) prevChart();
                 }}
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart className="outline-none focus:outline-none">
                     <Pie
                       data={charts[chartIndex].data}
                       cx="50%"
-                      cy="45%"
-                      innerRadius={65}
-                      outerRadius={90}
+                      cy="50%"
+                      innerRadius={window.innerWidth < 640 ? 60 : 75}
+                      outerRadius={window.innerWidth < 640 ? 85 : 100}
                       paddingAngle={5}
                       dataKey="value"
+                      stroke="none"
+                      className="outline-none focus:outline-none"
                     >
                       {charts[chartIndex].data.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={charts[chartIndex].colors[index % charts[chartIndex].colors.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={charts[chartIndex].colors[index % charts[chartIndex].colors.length]} 
+                          className="outline-none focus:outline-none"
+                        />
                       ))}
                     </Pie>
                     <Tooltip 
                       formatter={(value: number) => value.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
                     />
                     {charts[chartIndex].showLegend && (
-                      <Legend verticalAlign="bottom" height={36} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        align="center"
+                        iconType="circle"
+                        wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: '600' }}
+                      />
                     )}
                     {charts[chartIndex].id === 'summary' && (
-                      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" className="fill-gray-900 font-bold text-xl">
-                        {balance.toLocaleString('it-IT', { notation: 'compact' })}
+                      <text 
+                        x="50%" 
+                        y="50%" 
+                        textAnchor="middle" 
+                        dominantBaseline="middle" 
+                        className={`font-bold text-2xl font-mono ${balance >= 0 ? 'fill-green-500' : 'fill-red-500'}`}
+                      >
+                        {balance >= 0 ? '+' : '-'}{Math.abs(balance).toLocaleString('it-IT')} €
                       </text>
                     )}
                   </PieChart>
@@ -144,11 +167,11 @@ export function Stats({ transactions }: Props) {
             </AnimatePresence>
           </div>
 
-          <div className="flex justify-center gap-1.5 mt-4">
+          <div className="flex justify-center gap-1.5 mt-6 mb-2">
             {charts.map((_, i) => (
               <div 
                 key={i} 
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === chartIndex ? 'bg-blue-600 w-4' : 'bg-gray-200'}`}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === chartIndex ? 'bg-blue-600 w-5' : 'bg-gray-200'}`}
               />
             ))}
           </div>
