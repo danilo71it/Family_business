@@ -61,6 +61,7 @@ export function useFinance(groupId: string | null) {
     type: TransactionType;
     category: string;
     description: string;
+    note?: string;
     date: Date;
     userId: string;
     isEstimate: boolean;
@@ -98,6 +99,7 @@ export function useFinance(groupId: string | null) {
           type: t.type,
           category: t.category,
           description: t.description || '',
+          note: t.note || '',
           date: Timestamp.fromDate(occurrenceDate),
           userId: t.userId,
           groupId: cleanGroupId,
@@ -142,32 +144,35 @@ export function useFinance(groupId: string | null) {
   };
 
   const deleteTransaction = async (id: string) => {
-    if (!groupId) return;
+    const cleanGroupId = groupId?.trim();
+    if (!cleanGroupId) return;
     try {
-      await deleteDoc(doc(db, 'groups', groupId, 'transactions', id));
+      await deleteDoc(doc(db, 'groups', cleanGroupId, 'transactions', id));
     } catch (err) {
-      handleFirestoreError(err, 'delete', `groups/${groupId}/transactions/${id}`);
+      handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/${id}`);
     }
   };
 
   const deleteTransactionSeries = async (parentTransactionId: string) => {
-    if (!groupId || !parentTransactionId) return;
+    const cleanGroupId = groupId?.trim();
+    if (!cleanGroupId || !parentTransactionId) return;
     try {
-      const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+      const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
       const q = query(transactionsRef, where('parentTransactionId', '==', parentTransactionId));
       const snapshot = await getDocs(q);
       const batch = writeBatch(db);
       snapshot.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
     } catch (err) {
-      handleFirestoreError(err, 'delete', `groups/${groupId}/transactions/series/${parentTransactionId}`);
+      handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/series/${parentTransactionId}`);
     }
   };
 
   const updateTransaction = async (id: string, updates: any) => {
-    if (!groupId) return;
+    const cleanGroupId = groupId?.trim();
+    if (!cleanGroupId) return;
     try {
-      const docRef = doc(db, 'groups', groupId, 'transactions', id);
+      const docRef = doc(db, 'groups', cleanGroupId, 'transactions', id);
       const dataToSave: any = { ...updates, updatedAt: serverTimestamp() };
       
       // Handle date conversion if present
@@ -181,7 +186,7 @@ export function useFinance(groupId: string | null) {
         if (currentTx?.parentTransactionId) {
           const timeDiff = updates.date.getTime() - updates.originalDate.getTime();
           
-          const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+          const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
           const q = query(
             transactionsRef, 
             where('parentTransactionId', '==', currentTx.parentTransactionId),
@@ -215,7 +220,7 @@ export function useFinance(groupId: string | null) {
           const parentTxId = currentTx.parentTransactionId;
           const txDate = Timestamp.fromDate(currentTx.date);
           
-          const transactionsRef = collection(db, 'groups', groupId, 'transactions');
+          const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
           // Find all FUTURE transactions in this series
           const q = query(
             transactionsRef, 
@@ -238,7 +243,7 @@ export function useFinance(groupId: string | null) {
       
       await setDoc(docRef, dataToSave, { merge: true });
     } catch (err) {
-      handleFirestoreError(err, 'update', `groups/${groupId}/transactions/${id}`);
+      handleFirestoreError(err, 'update', `groups/${cleanGroupId}/transactions/${id}`);
     }
   };
 

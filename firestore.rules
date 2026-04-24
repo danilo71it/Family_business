@@ -17,12 +17,9 @@ service cloud.firestore {
     }
 
     function isGroupMember(groupId) {
-      return isSignedIn() && (
-        (exists(/databases/$(database)/documents/groups/$(groupId)) &&
-         request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members) ||
-        (exists(/databases/$(database)/documents/groups/$( " " + groupId)) &&
-         request.auth.uid in get(/databases/$(database)/documents/groups/$( " " + groupId)).data.members)
-      );
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/groups/$(groupId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
     }
 
     // User Profile Rules

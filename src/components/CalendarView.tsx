@@ -193,6 +193,15 @@ export function CalendarView({
               const holiday = isHoliday(day);
 
               const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount || t.type === 'appointment');
+              
+              // Filter for badges: hide appointments that have no category (note-only)
+              const badgesTxs = individualTxs.filter(t => {
+                if (t.type === 'appointment') {
+                  return t.category && t.category.trim().length > 0;
+                }
+                return true;
+              });
+
               const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount && t.type !== 'appointment');
               
               const incomeSum = otherTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
@@ -253,7 +262,7 @@ export function CalendarView({
                   </div>
 
                   <div className="space-y-1 relative z-10">
-                    {individualTxs.map(t => (
+                    {badgesTxs.map(t => (
                       <div 
                         key={t.id} 
                         onClick={(e) => {
