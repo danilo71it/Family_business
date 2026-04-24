@@ -96,11 +96,11 @@ export function CalendarView({
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-50 bg-white sticky top-0 z-10">
-        <div className="flex items-baseline gap-1.5 sm:gap-2 group cursor-pointer" onClick={() => setIsYearPickerOpen(true)}>
-          <h2 className="text-2xl sm:text-3xl font-serif text-brand-blue tracking-tight capitalize leading-none transition-colors group-hover:text-blue-700">
+        <div className="flex items-baseline gap-1 sm:gap-1.5 group cursor-pointer" onClick={() => setIsYearPickerOpen(true)}>
+          <h2 className="text-3xl sm:text-4xl font-serif text-brand-blue tracking-tight capitalize leading-none transition-colors group-hover:text-blue-700">
             {format(currentMonth, 'MMMM', { locale: it })}
           </h2>
-          <span className="text-base sm:text-xl font-sans font-medium text-gray-400 tracking-tight flex items-center gap-1 group-hover:text-gray-600 transition-colors">
+          <span className="text-xs sm:text-base font-sans font-medium text-gray-400 tracking-tight flex items-center gap-1 group-hover:text-gray-600 transition-colors">
             {format(currentMonth, 'yyyy', { locale: it })}
           </span>
         </div>
@@ -230,7 +230,7 @@ export function CalendarView({
                       </span>
                       {holiday && (
                         <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter leading-none">
-                          FEST
+                          FESTIVO
                         </span>
                       )}
                     </div>
@@ -258,11 +258,14 @@ export function CalendarView({
                           e.stopPropagation();
                           onEditTransaction?.(t);
                         }}
-                        className={`text-[10px] font-semibold tracking-tighter truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase ${
+                        className={`text-[10px] font-semibold tracking-tighter truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase flex items-center gap-1 ${
                           t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         } ${t.isEstimate || t.isUnknownAmount ? 'opacity-70 border border-dashed border-current' : ''}`}
                       >
-                        {t.isUnknownAmount ? (t.description || t.category || 'DA DEF') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
+                        {t.type === 'income' ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                        <span className="truncate">
+                          {t.isUnknownAmount ? (t.description || t.category || 'DA DEF') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
+                        </span>
                       </div>
                     ))}
 
