@@ -62,22 +62,22 @@ export function Stats({ transactions }: Props) {
     <div id="finance-stats" className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Entrate Totali</p>
-        <p className="text-3xl font-mono font-bold text-green-600">
-          {totalIncome.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+        <p className="text-2xl font-mono font-bold text-green-600 transition-all">
+          {totalIncome.toLocaleString('it-IT')}€
         </p>
       </div>
       
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Uscite Totali</p>
-        <p className="text-3xl font-mono font-bold text-red-500">
-          {totalExpense.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+        <p className="text-2xl font-mono font-bold text-red-500 transition-all">
+          {totalExpense.toLocaleString('it-IT')}€
         </p>
       </div>
 
       <div className={`p-6 rounded-2xl shadow-sm border transition-colors ${balance >= 0 ? 'bg-blue-600 border-blue-700 text-white' : 'bg-red-600 border-red-700 text-white'}`}>
         <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Bilancio Attuale</p>
-        <p className="text-3xl font-mono font-bold">
-          {balance.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+        <p className="text-2xl font-mono font-bold transition-all">
+          {balance >= 0 ? '' : '-'}{Math.abs(balance).toLocaleString('it-IT')}€
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export function Stats({ transactions }: Props) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => value.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+                      formatter={(value: number) => `${value.toLocaleString('it-IT')}€`}
                       contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
                     />
                     {charts[chartIndex].showLegend && (
@@ -156,9 +156,9 @@ export function Stats({ transactions }: Props) {
                         y="50%" 
                         textAnchor="middle" 
                         dominantBaseline="middle" 
-                        className={`font-bold text-2xl font-mono ${balance >= 0 ? 'fill-green-500' : 'fill-red-500'}`}
+                        className={`font-bold text-xl font-mono ${balance >= 0 ? 'fill-green-500' : 'fill-red-500'}`}
                       >
-                        {balance >= 0 ? '+' : '-'}{Math.abs(balance).toLocaleString('it-IT')} €
+                        {balance >= 0 ? '+' : '-'}{Math.abs(balance).toLocaleString('it-IT')}€
                       </text>
                     )}
                   </PieChart>

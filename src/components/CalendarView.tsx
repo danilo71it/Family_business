@@ -162,7 +162,7 @@ export function CalendarView({
           ))}
         </div>
 
-        <AnimatePresence initial={false} custom={direction}>
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={currentMonth.toISOString()}
             custom={direction}
@@ -174,7 +174,7 @@ export function CalendarView({
               x: { type: "spring", stiffness: 300, damping: 30 },
               opacity: { duration: 0.2 }
             }}
-            className="grid grid-cols-7"
+            className="grid grid-cols-7 w-full h-full"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={1}
