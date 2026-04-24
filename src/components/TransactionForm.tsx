@@ -84,27 +84,32 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!category.trim()) return;
+    
+    // We allow saving if either category or note is filled
+    if (!category.trim() && !note.trim()) return;
     
     setIsSubmitting(true);
     try {
       // Handle amount parsing more robustly
       let parsedAmount = 0;
+      let actualType = type;
+
       if (!isUnknownAmount) {
-        parsedAmount = parseFloat(amount.replace(',', '.'));
+        const amountStr = amount.replace(',', '.');
+        parsedAmount = parseFloat(amountStr);
         if (isNaN(parsedAmount)) parsedAmount = 0;
       }
 
-      if (!isEstimate && !isUnknownAmount && parsedAmount <= 0 && amount !== '0') {
-        // If it's a "certain" transaction (not variable/unknown), it must have an amount > 0
-        // unless specifically '0' was intended (rare for expenses but possible)
-        if (!amount || isNaN(parsedAmount)) {
-          setIsSubmitting(false);
-          return;
-        }
+      // Determine if it's an appointment (neutral)
+      // Conditions for appointment:
+      // 1. Amount is empty or 0 AND isUnknownAmount is false
+      // 2. Or if explicitly decided (but here we follow original user logic of automatic detection)
+      const isActuallyZero = !amount || parseFloat(amount.replace(',', '.')) === 0;
+      if (!isUnknownAmount && isActuallyZero) {
+        actualType = 'appointment';
       }
 
-    const selectedDate = new Date(date);
+      const selectedDate = new Date(date);
     if (isNaN(selectedDate.getTime())) {
       alert('Data non valida.');
       setIsSubmitting(false);
@@ -114,8 +119,8 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
 
     const data: any = {
       amount: parsedAmount,
-      type,
-      category: category.trim(),
+      type: actualType,
+      category: category.trim() || (note.trim() ? '' : 'Nota'), // If only note, category remains empty or generic
       description: '',
       note: note.trim(),
       date: selectedDate,
@@ -200,9 +205,8 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               onFocus={(e) => e.target.select()}
-              placeholder=""
+              placeholder="Descrizione o Appuntamento"
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-              required
             />
           </div>
         </div>
@@ -385,7 +389,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             type === 'income' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-red-600 shadow-red-100 hover:bg-red-700'
           }`}
         >
-          {isSubmitting ? 'Salvataggio...' : (initialData ? 'Aggiorna Transazione' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita'))}
+          {isSubmitting ? 'Salvataggio...' : (initialData ? 'Aggiorna' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita'))}
         </button>
         
         {initialData && onDelete && (

@@ -5,7 +5,7 @@ import {
   isToday
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell, Calendar as CalendarIcon, Check, Pencil } from 'lucide-react';
 import { Transaction, WorkShift, ShiftCycle, ShiftOverride } from '../types';
 import { getShiftForDay } from '../lib/shiftUtils';
 import { isHoliday } from '../lib/holidayUtils';
@@ -192,11 +192,13 @@ export function CalendarView({
               const isCurrentMonth = isSameMonth(day, monthStart);
               const holiday = isHoliday(day);
 
-              const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount);
-              const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount);
+              const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount || t.type === 'appointment');
+              const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount && t.type !== 'appointment');
               
               const incomeSum = otherTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
               const expenseSum = otherTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+              const hasNoteInCell = dayTransactions.some(t => t.note && t.note.trim().length > 0);
 
               return (
                 <div
@@ -259,12 +261,16 @@ export function CalendarView({
                           onEditTransaction?.(t);
                         }}
                         className={`text-[10px] font-semibold tracking-tighter truncate px-1.5 py-0.5 rounded transition-transform active:scale-95 hover:brightness-95 uppercase flex items-center gap-1 ${
-                          t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          t.type === 'income' ? 'bg-green-100 text-green-700' : 
+                          t.type === 'expense' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-900 border border-gray-200'
                         } ${t.isEstimate || t.isUnknownAmount ? 'opacity-70 border border-dashed border-current' : ''}`}
                       >
-                        {t.type === 'income' ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                        {t.type === 'income' && <TrendingUp size={10} />}
+                        {t.type === 'expense' && <TrendingDown size={10} />}
+                        {t.type === 'appointment' && <CalendarIcon size={10} className="text-gray-400" />}
                         <span className="truncate">
-                          {t.isUnknownAmount ? (t.description || t.category || 'DA DEF') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }))}
+                          {t.isUnknownAmount ? (t.description || t.category || 'DA DEF') : (t.type === 'appointment' ? (t.category || t.note || 'Appuntamento') : (t.isPrivacyActive || t.isEstimate ? t.category : t.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })))}
                         </span>
                       </div>
                     ))}
@@ -284,6 +290,13 @@ export function CalendarView({
                       )}
                     </div>
                   </div>
+
+                  {/* Note Pencil Icon */}
+                  {hasNoteInCell && (
+                    <div className="absolute bottom-1 right-1 opacity-40">
+                      <Pencil size={12} className="text-gray-400" />
+                    </div>
+                  )}
                 </div>
               );
             })}
