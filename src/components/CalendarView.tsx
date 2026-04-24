@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import { 
+  format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
+  eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths,
+  isToday
+} from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Bell, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { Transaction, WorkShift, ShiftCycle, ShiftOverride } from '../types';
@@ -91,11 +96,11 @@ export function CalendarView({
     <div id="calendar-view" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-50 bg-white sticky top-0 z-10">
-        <div className="flex items-baseline gap-2 sm:gap-3 group cursor-pointer" onClick={() => setIsYearPickerOpen(true)}>
-          <h2 className="text-3xl sm:text-4xl font-serif text-brand-blue tracking-tight capitalize leading-none transition-colors group-hover:text-blue-700">
+        <div className="flex items-baseline gap-1.5 sm:gap-2 group cursor-pointer" onClick={() => setIsYearPickerOpen(true)}>
+          <h2 className="text-2xl sm:text-3xl font-serif text-brand-blue tracking-tight capitalize leading-none transition-colors group-hover:text-blue-700">
             {format(currentMonth, 'MMMM', { locale: it })}
           </h2>
-          <span className="text-xl sm:text-2xl font-sans font-light text-gray-400 tracking-tight flex items-center gap-1 group-hover:text-gray-600 transition-colors">
+          <span className="text-base sm:text-xl font-sans font-medium text-gray-400 tracking-tight flex items-center gap-1 group-hover:text-gray-600 transition-colors">
             {format(currentMonth, 'yyyy', { locale: it })}
           </span>
         </div>

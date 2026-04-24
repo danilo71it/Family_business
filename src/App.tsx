@@ -163,8 +163,8 @@ export default function App() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center shrink-0">
             <div className="flex flex-col select-none">
-              <span className="font-serif text-3xl sm:text-4xl text-brand-blue tracking-tight">Family</span>
-              <span className="text-[8px] sm:text-[10px] font-sans font-medium text-gray-950 uppercase tracking-[0.54em] ml-[3px] -mt-[2px] opacity-90">BUSINESS</span>
+              <span className="font-serif text-2xl sm:text-3xl text-brand-blue tracking-tight leading-none">Family</span>
+              <span className="text-[7px] sm:text-[9px] font-sans font-medium text-gray-950 uppercase tracking-[0.6em] ml-[3px] mt-[4px] opacity-90">BUSINESS</span>
             </div>
           </div>
 
