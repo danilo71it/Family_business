@@ -27,18 +27,26 @@ async function startServer() {
 
   // API to send a test notification or trigger by Firestore (conceptually)
   app.get('/api/notifications/config', (req, res) => {
+    // Check if VAPID keys are present in any case or prefix
     const allKeys = Object.keys(process.env);
-    const vapidKeys = allKeys.filter(k => k.toUpperCase().includes('VAPID'));
     
-    console.log('--- DEBUG VAPID KEYS ---');
-    console.log('Found VAPID-related keys in environment:', vapidKeys);
-    console.log('VITE_VAPID_PUBLIC_KEY present:', !!process.env.VITE_VAPID_PUBLIC_KEY);
-    console.log('VAPID_PRIVATE_KEY present:', !!process.env.VAPID_PRIVATE_KEY);
-    console.log('------------------------');
+    // Specifically check for our keys
+    const publicKey = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    
+    // Find all keys that might be relevant for debugging
+    const debugKeys = allKeys.filter(k => 
+      k.toUpperCase().includes('VAPID') || 
+      k.toUpperCase().includes('PUBLIC') || 
+      k.toUpperCase().includes('PRIVATE')
+    ).map(k => ({ name: k, length: process.env[k]?.length }));
 
+    console.log('--- SERVER ENVIRONMENT DIAGNOSTIC ---');
+    console.log('PublicKey present:', !!publicKey);
+    console.log('Debug Keys:', debugKeys);
+    
     res.json({ 
-      publicKey: process.env.VITE_VAPID_PUBLIC_KEY || '',
-      availableKeys: vapidKeys
+      publicKey: publicKey,
+      debugInfo: debugKeys
     });
   });
 

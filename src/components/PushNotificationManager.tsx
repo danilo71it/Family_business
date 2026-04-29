@@ -80,9 +80,13 @@ export function PushNotificationManager({ userId }: Props) {
       }
 
       if (!publicKey) {
-        const diagnosticInfo = data?.availableKeys 
-          ? ` (Chiavi trovate: ${data.availableKeys.join(', ')})` 
-          : ' (Nessuna chiave trovata nei Secrets)';
+        let diagnosticInfo = '';
+        if (data && data.debugInfo) {
+          const keysFound = data.debugInfo.map((k: any) => k.name).join(', ');
+          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID o VITE trovata nei Secrets)';
+        } else {
+          diagnosticInfo = ' (Impossibile comunicare con il server per la diagnostica)';
+        }
         throw new Error(`VAPID Public Key non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto.`);
       }
 
