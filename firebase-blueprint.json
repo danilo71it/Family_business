@@ -20,10 +20,21 @@
       "properties": {
         "id": { "type": "string" },
         "amount": { "type": "number" },
-        "type": { "type": "string", "enum": ["income", "expense", "appointment"] },
+        "type": { "type": "string", "enum": ["income", "expense", "appointment", "note"] },
         "category": { "type": "string" },
         "description": { "type": "string" },
         "note": { "type": "string" },
+        "address": { "type": "string" },
+        "reminders": { 
+          "type": "array", 
+          "items": { 
+            "type": "object", 
+            "properties": {
+              "value": { "type": "number" },
+              "unit": { "type": "string", "enum": ["minutes", "hours", "days"] }
+            }
+          }
+        },
         "date": { "type": "string", "format": "date-time" },
         "userId": { "type": "string" },
         "groupId": { "type": "string" },

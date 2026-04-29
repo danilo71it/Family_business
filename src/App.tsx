@@ -8,6 +8,7 @@ import { Stats } from './components/Stats';
 import { CalendarView } from './components/CalendarView';
 import { ShiftConfig } from './components/ShiftConfig';
 import { ShiftLegend } from './components/ShiftLegend';
+import { DailyPanel } from './components/DailyPanel';
 import { useWorkShifts } from './hooks/useWorkShifts';
 import { getShiftForDay } from './lib/shiftUtils';
 import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock, Settings, RefreshCw } from 'lucide-react';
@@ -252,161 +253,51 @@ export default function App() {
               </h2>
             </div>
             <Stats transactions={filteredTransactionsByMonth} />
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-12 space-y-6">
-                <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Registro Transazioni</h2>
-                <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} onEdit={(t) => { setEditingTransaction(t); setSelectedDate(t.date); setViewMode('calendar'); setTimeout(scrollToForm, 100); }} />
-              </div>
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-gray-900 tracking-tight">Registro Transazioni</h2>
+              <TransactionList transactions={filteredTransactionsByMonth} onDelete={deleteTransaction} onEdit={(t) => { setEditingTransaction(t); setSelectedDate(t.date); setViewMode('calendar'); }} />
             </div>
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-4">
-                <CalendarView 
-                  transactions={transactions} 
-                  shifts={shifts}
-                  cycle={cycle}
-                  overrides={overrides}
-                  selectedDate={selectedDate}
-                  initialMonth={summaryMonth}
-                  onMonthChange={(date) => setSummaryMonth(date)}
-                  onEditTransaction={(t) => {
-                    setEditingTransaction(t);
-                    setSelectedDate(t.date);
-                    setIsAddingTransaction(false);
-                    setTimeout(scrollToForm, 100);
-                  }}
-                  onSelectDate={(date) => {
-                    if (selectedDate && isSameDay(date, selectedDate)) {
-                      setSelectedDate(null);
-                      setIsAddingTransaction(false);
-                      setEditingTransaction(null);
-                    } else {
-                      setSelectedDate(date);
-                      const dayTransactions = transactions.filter(t => isSameDay(t.date, date));
-                      setIsAddingTransaction(dayTransactions.length === 0);
-                      setEditingTransaction(null);
-                      if (dayTransactions.length === 0) {
-                        setTimeout(scrollToForm, 100);
-                      }
-                    }
-                  }} 
-                />
-                <ShiftLegend shifts={shifts} cycle={cycle} overrides={overrides} />
-              </div>
-
-              <div className="lg:col-span-4 space-y-6">
-                {(selectedDate || editingTransaction) && (
-                  <div id="transaction-form-container" className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 outline-none h-fit animate-in slide-in-from-right-4 duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                        {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: it }) : 'Nuova Transazione'}
-                      </h2>
-                      <button 
-                        onClick={() => { setSelectedDate(null); setIsAddingTransaction(false); setEditingTransaction(null); }} 
-                        className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                    
-                    {selectedDate && (
-                      <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-4">
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">TURNI</label>
-                          <div className="flex flex-wrap gap-2">
-                            <button 
-                              onClick={async () => {
-                                 await saveOverride({ date: selectedDate, shiftId: null });
-                                 setIsAddingTransaction(false);
-                              }}
-                              className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center text-[10px] font-black transition-all ${
-                                !getShiftForDay(selectedDate, shifts, cycle, overrides) ? 'border-red-500 bg-white text-red-500 ring-2 ring-red-100 shadow-sm' : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300'
-                              }`}
-                              title="Nessun turno / Riposo"
-                            >
-                              OFF
-                            </button>
-                            {shifts.map(s => {
-                              const currentShift = getShiftForDay(selectedDate, shifts, cycle, overrides);
-                              const isSelected = currentShift?.id === s.id;
-                              return (
-                                <button 
-                                  key={s.id}
-                                  onClick={async () => {
-                                    await saveOverride({ date: selectedDate, shiftId: s.id });
-                                    setSelectedDate(null);
-                                  }}
-                                  className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center text-[10px] font-black transition-all shadow-sm ${
-                                    isSelected ? 'border-red-500 ring-2 ring-red-100 scale-105 z-10' : 'border-transparent opacity-80'
-                                  }`}
-                                  style={{ 
-                                    backgroundColor: s.color, 
-                                    color: 'white',
-                                  }}
-                                  title={s.label || s.name}
-                                >
-                                  {s.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                   
-                    {editingTransaction ? (
-                      <div className="animate-in fade-in slide-in-from-right-4">
-                        <TransactionForm 
-                          onAdd={async (t) => { await addTransaction(t); setEditingTransaction(null); }} 
-                          onUpdate={async (id, t) => { await updateTransaction(id, t); setEditingTransaction(null); }}
-                          onDelete={async (id) => { await deleteTransaction(id); setEditingTransaction(null); }}
-                          onDeleteSeries={async (pid) => { await deleteTransactionSeries(pid); setEditingTransaction(null); }}
-                          userId={user.uid} 
-                          initialData={editingTransaction} 
-                        />
-                        <button 
-                          onClick={() => setEditingTransaction(null)}
-                          className="w-full mt-4 py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all"
-                        >
-                          Annulla Modifica
-                        </button>
-                      </div>
-                    ) : selectedDate ? (
-                      <div className="space-y-4">
-                        {isAddingTransaction ? (
-                          <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-                            <TransactionForm onAdd={async (t) => { await addTransaction(t); setIsAddingTransaction(false); }} userId={user.uid} defaultDate={selectedDate} />
-                            <button 
-                              onClick={() => setIsAddingTransaction(false)}
-                              className="w-full py-2 text-gray-400 font-bold rounded-xl text-sm hover:text-gray-600 transition-all font-mono"
-                            >
-                              Annulla
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
-                            <TransactionList 
-                              transactions={filteredTransactionsByDate} 
-                              onDelete={deleteTransaction}
-                              onEdit={(t) => setEditingTransaction(t)}
-                            />
-                            <button 
-                              onClick={() => setIsAddingTransaction(true)}
-                              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 active:scale-95"
-                            >
-                              <Plus size={18} />
-                              Aggiungi per il {format(selectedDate, 'd MMM', { locale: it })}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </div>
+            <div className="space-y-4">
+              <CalendarView 
+                transactions={transactions} 
+                shifts={shifts}
+                cycle={cycle}
+                overrides={overrides}
+                selectedDate={selectedDate}
+                initialMonth={summaryMonth}
+                onMonthChange={(date) => setSummaryMonth(date)}
+                onEditTransaction={(t) => {
+                  setEditingTransaction(t);
+                  setSelectedDate(t.date);
+                }}
+                onSelectDate={(date) => {
+                  setSelectedDate(date);
+                }} 
+              />
+              <ShiftLegend shifts={shifts} cycle={cycle} overrides={overrides} />
             </div>
+
+            {selectedDate && (
+              <DailyPanel 
+                date={selectedDate}
+                transactions={transactions}
+                shifts={shifts}
+                cycle={cycle}
+                overrides={overrides}
+                userId={user.uid}
+                onAddTransaction={addTransaction}
+                onUpdateTransaction={updateTransaction}
+                onDeleteTransaction={deleteTransaction}
+                onSaveShiftOverride={saveOverride}
+                onClose={() => {
+                  setSelectedDate(null);
+                  setEditingTransaction(null);
+                }}
+              />
+            )}
           </div>
         )}
       </main>

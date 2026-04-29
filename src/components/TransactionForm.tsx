@@ -17,6 +17,8 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const [amount, setAmount] = useState(initialData?.amount.toString() || '');
   const [type, setType] = useState<TransactionType>(initialData?.type || 'expense');
   const [category, setCategory] = useState(initialData?.category || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [time, setTime] = useState(initialData?.time || '');
   const [note, setNote] = useState(initialData?.note || '');
   const [date, setDate] = useState(initialData ? format(initialData.date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
   
@@ -26,6 +28,8 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       setAmount(initialData.amount.toString());
       setType(initialData.type);
       setCategory(initialData.category);
+      setDescription(initialData.description || '');
+      setTime(initialData.time || '');
       setNote(initialData.note || '');
       setDate(format(initialData.date, 'yyyy-MM-dd'));
       setIsEstimate(initialData.isEstimate || false);
@@ -120,9 +124,12 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
     const data: any = {
       amount: parsedAmount,
       type: actualType,
-      category: category.trim() || (note.trim() ? '' : 'Nota'), // If only note, category remains empty or generic
-      description: '',
+      category: category.trim() || (note.trim() && actualType === 'note' ? 'Nota' : ''),
+      description: description,
       note: note.trim(),
+      address: initialData?.address || '',
+      time: time,
+      reminders: initialData?.reminders || [],
       date: selectedDate,
       userId,
       isEstimate: !!(recurring ? isEstimate : false),

@@ -194,20 +194,21 @@ export function CalendarView({
 
               const individualTxs = dayTransactions.filter(t => t.recurring || t.isEstimate || t.isPrivacyActive || t.isUnknownAmount || t.type === 'appointment');
               
-              // Filter for badges: hide appointments that have no category (note-only)
+              // Filter for badges: hide appointments that have no category (note-only) and hide pure notes
               const badgesTxs = individualTxs.filter(t => {
+                if (t.type === 'note') return false;
                 if (t.type === 'appointment') {
                   return t.category && t.category.trim().length > 0;
                 }
                 return true;
               });
 
-              const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount && t.type !== 'appointment');
+              const otherTxs = dayTransactions.filter(t => !t.recurring && !t.isEstimate && !t.isPrivacyActive && !t.isUnknownAmount && t.type !== 'appointment' && t.type !== 'note');
               
               const incomeSum = otherTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
               const expenseSum = otherTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
 
-              const hasNoteInCell = dayTransactions.some(t => t.note && t.note.trim().length > 0);
+              const hasNoteInCell = dayTransactions.some(t => t.type === 'note' || (t.note && t.note.trim().length > 0));
 
               return (
                 <div

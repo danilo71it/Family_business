@@ -1,6 +1,12 @@
-export type TransactionType = 'income' | 'expense' | 'appointment';
+export type TransactionType = 'income' | 'expense' | 'appointment' | 'note';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 export type ViewMode = 'calendar' | 'summary';
+export type ReminderUnit = 'minutes' | 'hours' | 'days';
+
+export interface Reminder {
+  value: number;
+  unit: ReminderUnit;
+}
 
 export interface UserProfile {
   uid: string;
@@ -23,7 +29,7 @@ export interface Transaction {
   updatedAt: Date;
   note?: string; 
   
-  // New fields
+  // New/Enhanced fields
   isEstimate: boolean; // variabile vs certa
   isUnknownAmount?: boolean; // importo da definire
   isPrivacyActive?: boolean; // mostra descrizione invece di importo
@@ -32,6 +38,11 @@ export interface Transaction {
   occurrenceCount?: number;
   reminderEnabled: boolean;
   parentTransactionId?: string; // linkage if generated from a recurrence
+
+  // Appointment specific fields
+  address?: string;
+  time?: string; // HH:mm
+  reminders?: Reminder[];
 }
 
 export interface FamilyGroup {

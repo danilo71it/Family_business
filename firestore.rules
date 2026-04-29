@@ -57,7 +57,7 @@ service cloud.firestore {
       match /transactions/{transactionId} {
         function isValidTransaction(data) {
           return data.amount is number &&
-                 data.type in ['income', 'expense', 'appointment'] &&
+                 data.type in ['income', 'expense', 'appointment', 'note'] &&
                  data.category is string &&
                  data.date is timestamp &&
                  data.userId is string &&
@@ -69,6 +69,8 @@ service cloud.firestore {
                  (data.get('isPrivacyActive', null) == null || data.isPrivacyActive is bool) &&
                  (data.get('description', null) == null || data.description is string) &&
                  (data.get('note', null) == null || data.note is string) &&
+                 (data.get('address', null) == null || data.address is string) &&
+                 (data.get('reminders', null) == null || data.reminders is list) &&
                  (data.get('frequency', null) == null || data.frequency == "" || data.frequency in ['daily', 'weekly', 'monthly', 'yearly']) &&
                  (data.get('occurrenceCount', null) == null || data.occurrenceCount is number) &&
                  (data.get('parentTransactionId', null) == null || data.parentTransactionId is string);
