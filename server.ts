@@ -28,28 +28,29 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // --- ROTTE DI CONFIGURAZIONE (MASSIMA PRIORITÀ) ---
-  app.get('/api/va-keys', (req, res) => {
-    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID] Request for keys. Found: ${!!pub} (Len: ${pub.length})`);
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.json({ publicKey: pub, status: 'ok' });
-  });
-
-  app.get('/config-check', (req, res) => {
-    res.redirect('/api/va-keys');
-  });
-
+  // 1. General Middleware - MUST BE AT THE TOP
   app.use(cors());
   app.use(express.json());
 
   // Log di ogni richiesta per debugging reale
   app.use((req, res, next) => {
     if (req.url.startsWith('/api') || req.url.includes('check')) {
-      console.log(`[DEBUG SERV] ${req.method} ${req.url}`);
+      console.log(`[DEBUG SERV] ${req.method} ${req.url} - Origin: ${req.get('origin')}`);
     }
     next();
+  });
+
+  // --- ROTTE DI CONFIGURAZIONE ---
+  app.get('/api/va-keys', (req, res) => {
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    console.log(`[VAPID] Response for keys. Found: ${!!pub} (Len: ${pub.length})`);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json({ publicKey: pub, status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  app.get('/config-check', (req, res) => {
+    res.redirect('/api/va-keys');
   });
   // --- FINE ROTTE PRIORITÀ ---
 

@@ -59,22 +59,34 @@ export function PushNotificationManager({ userId }: Props) {
       console.log('Build-time VAPID key:', publicKey);
       
       // Fallback: fetch from server if env is empty
-      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined') {
+      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined' || publicKey.length < 20) {
         try {
-          console.log('Fetching keys from server...');
-          const res = await fetch('/api/va-keys?t=' + Date.now());
+          console.log('Fetching keys from server at /api/va-keys...');
+          const res = await fetch('/api/va-keys?t=' + Date.now(), {
+            headers: { 'Accept': 'application/json' }
+          });
+          
           if (res.ok) {
             const result = await res.json();
-            console.log('Key received from server:', !!result.publicKey);
-            publicKey = result.publicKey;
+            console.log('Key received from server:', result);
+            if (result.publicKey) {
+              publicKey = result.publicKey;
+            } else {
+              data = { error: 'Server returned empty publicKey', result };
+            }
+          } else {
+            console.error('Server error status:', res.status);
+            data = { error: `Server status ${res.status}` };
           }
         } catch (fetchErr: any) {
-          console.error('Fetch error:', fetchErr);
+          console.error('Fetch exception:', fetchErr);
+          data = { error: `Fetch exception: ${fetchErr.message}` };
         }
       }
 
-      if (!publicKey || publicKey === 'undefined') {
-        throw new Error("Chiave VAPID non trovata. Per favore ricarica la pagina con CTRL+F5 per forzare l'aggiornamento.");
+      if (!publicKey || publicKey === 'undefined' || publicKey.length < 20) {
+        const diag = data?.error ? ` [DIAG: ${data.error}]` : '';
+        throw new Error(`Chiave VAPID non trovata.${diag} Per favore ricarica la pagina con CTRL+F5.`);
       }
 
       console.log('Using VAPID key for subscription:', publicKey);
