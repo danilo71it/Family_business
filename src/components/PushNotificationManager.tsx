@@ -56,28 +56,35 @@ export function PushNotificationManager({ userId }: Props) {
         throw new Error("Il browser non supporta i Service Worker.");
       }
 
-      // 1. Assicuriamoci che il Service Worker sia pronto (senza timeout custom bloccante)
-      // navigator.serviceWorker.ready è la promessa standard più robusta
+      // 1. Assicuriamoci che il Service Worker sia pronto e attivo
+      console.log('Controllo Service Worker...');
       const registration = await navigator.serviceWorker.ready;
-      console.log('Service Worker pronto:', registration.active?.state);
       
-      // 2. Recupero Chiave VAPID dal server (unico endpoint pulito)
+      // Piccolo check aggiuntivo per assicurarsi che sia "active"
+      if (!registration.active) {
+        console.log('SW pronto ma non ancora attivo, attendo un istante...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      console.log('Service Worker pronto e attivo.');
+      
+      // 2. Recupero Chiave VAPID dal server con URL assoluto per evitare problemi su alcuni browser mobile
       let publicKey = '';
       try {
-        console.log('Recupero chiave VAPID da /api/vapid-config...');
-        const res = await fetch('/api/vapid-config?t=' + Date.now());
-        if (!res.ok) throw new Error(`Errore HTTP ${res.status}`);
+        const url = `${window.location.origin}/api/vapid-config?t=${Date.now()}`;
+        console.log('Recupero chiave VAPID da:', url);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         
         const config = await res.json();
         if (config.publicKey && config.publicKey.length > 20) {
           publicKey = config.publicKey;
           console.log('Chiave VAPID ricevuta correttamente');
         } else {
-          throw new Error("Il server ha restituito una chiave vuota o non valida. Verifica i Secrets.");
+          throw new Error("Chiave vuota o non valida. Verifica i Secrets configurati.");
         }
       } catch (err: any) {
         console.error('Errore fetch VAPID:', err);
-        throw new Error(`Impossibile recuperare la chiave dal server: ${err.message}`);
+        throw new Error(`Connessione server fallita: ${err.message}`);
       }
 
       console.log('Sottoscrizione in corso con chiave:', publicKey.substring(0, 10) + '...');

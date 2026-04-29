@@ -28,14 +28,21 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. ROTTE CRITICHE
+  // 1. ROTTE CRITICHE E FILE STATICI
+  app.get('/sw.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'sw.js'));
+  });
+
   app.get('/api/vapid-config', (req, res) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    console.log(`[VAPID] Serving key: ${pub ? 'FOUND' : 'NOT FOUND'}`);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({ publicKey: pub });
   });
 
   app.get('/health', (req, res) => res.send('OK'));
+
+  app.use(express.static(path.join(process.cwd(), 'public')));
 
   // 2. Middleware generali
   app.use(cors());
