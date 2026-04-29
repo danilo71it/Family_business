@@ -6,12 +6,14 @@ import './index.css';
 // Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(registration => {
-        console.log('SW registrato:', registration.scope);
+        console.log('SW registrato con scope:', registration.scope);
+        // Forza l'aggiornamento se necessario
+        registration.update();
       })
       .catch(error => {
-        console.error('SW errore registrazione:', error);
+        console.error('Errore registrazione SW in main:', error);
       });
   });
 }

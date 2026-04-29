@@ -30,13 +30,18 @@ async function startServer() {
 
   // 1. ROTTE CRITICHE E FILE STATICI
   app.get('/sw.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public', 'sw.js'));
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    console.log(`[SW_SERVE] Serving SW from: ${swPath}`);
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.sendFile(swPath);
   });
 
   app.get('/api/vapid-config', (req, res) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID] Serving key: ${pub ? 'FOUND' : 'NOT FOUND'}`);
+    console.log(`[VAPID] Serving key: ${pub ? 'FOUND' : 'NOT FOUND'} to ${req.ip}`);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.json({ publicKey: pub });
   });
 
@@ -49,9 +54,7 @@ async function startServer() {
   app.use(express.json());
 
   app.use((req, res, next) => {
-    if (req.url.includes('api') || req.url.includes('key') || req.url.includes('sw.js')) {
-      console.log(`[HTTP LOG] ${req.method} ${req.url}`);
-    }
+    console.log(`[REQUEST] ${req.method} ${req.url}`);
     next();
   });
   

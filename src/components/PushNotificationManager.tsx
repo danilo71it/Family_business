@@ -55,25 +55,38 @@ export function PushNotificationManager({ userId }: Props) {
       // Controllo se siamo su GitHub Pages (servizio statico senza backend)
       const isStaticEnv = window.location.hostname.includes('github.io');
       if (isStaticEnv) {
-        throw new Error("Attenzione: Sei su GitHub Pages. Le notifiche NON possono funzionare qui perché manca il server (backend). Usa l'URL dell'App condivisa di AI Studio.");
+        throw new Error("ATTENZIONE: Stai usando GitHub Pages. Questo servizio è statico e NON supporta il backend necessario per le notifiche push. Per favore, usa l'URL 'Shared App' o 'Development App' fornito da AI Studio.");
       }
 
       if (!('serviceWorker' in navigator)) {
-        throw new Error("Il browser non supporta i Service Worker.");
+        throw new Error("Il browser non supporta i Service Worker. Prova un browser moderno come Chrome o Firefox.");
       }
 
       // 1. Assicuriamoci che il Service Worker sia pronto e attivo
       console.log('Controllo Service Worker...');
-      const registration = await navigator.serviceWorker.ready;
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await navigator.serviceWorker.ready;
+      } catch (swErr: any) {
+        console.error('navigator.serviceWorker.ready failed:', swErr);
+        // Fallback: prova a registrarlo di nuovo se ready fallisce
+        registration = await navigator.serviceWorker.register('/sw.js');
+      }
+
+      console.log('Service Worker trovato:', registration.scope);
       
+      // Assicuriamoci che sia attivo
       if (!registration.active) {
-        console.log('SW pronto ma non ancora attivo, attendo un istante...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('SW pronto ma non ancora attivo, attendo attivazione...');
+        // Piccola attesa
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Se ancora non attivo, proviamo a ri-caricare
+        if (!registration.active) {
+          throw new Error("Il Service Worker non si è attivato in tempo. Svuota la cache e ricarica la pagina.");
+        }
       }
       
-      if (!registration.active) {
-        throw new Error("Service Worker non attivo. Svuota la cache e riprova.");
-      }
       console.log('Service Worker pronto e attivo.');
       
       // 2. Recupero Chiave VAPID dal server con URL assoluto
@@ -84,8 +97,8 @@ export function PushNotificationManager({ userId }: Props) {
         const res = await fetch(url);
         
         if (!res.ok) {
-          if (res.status === 404) throw new Error("Il backend non risponde. Assicurati di non essere su un sito statico.");
-          throw new Error(`Errore server: ${res.status}`);
+          if (res.status === 404) throw new Error("Il backend (server) non è stato trovato a questo indirizzo. Assicurati di non essere su GitHub Pages.");
+          throw new Error(`Errore server HTTP ${res.status}`);
         }
         
         const config = await res.json();
@@ -93,11 +106,11 @@ export function PushNotificationManager({ userId }: Props) {
           publicKey = config.publicKey;
           console.log('Chiave VAPID ricevuta correttamente');
         } else {
-          throw new Error("Chiave non valida/vuota nei Secrets del server.");
+          throw new Error("Il server risponde ma la chiave VAPID è vuota. Verifica i Secrets configurati su AI Studio.");
         }
       } catch (err: any) {
         console.error('Errore fetch VAPID:', err);
-        throw new Error(`Connessione backend fallita: ${err.message}`);
+        throw new Error(`Connessione al backend fallita: ${err.message}`);
       }
 
       console.log('Sottoscrizione in corso con chiave:', publicKey.substring(0, 10) + '...');
