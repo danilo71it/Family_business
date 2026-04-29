@@ -27,11 +27,18 @@ async function startServer() {
 
   // API to send a test notification or trigger by Firestore (conceptually)
   app.get('/api/notifications/config', (req, res) => {
-    const keys = Object.keys(process.env).filter(k => k.includes('VAPID'));
-    console.log('Available VAPID keys on server:', keys);
+    const allKeys = Object.keys(process.env);
+    const vapidKeys = allKeys.filter(k => k.toUpperCase().includes('VAPID'));
+    
+    console.log('--- DEBUG VAPID KEYS ---');
+    console.log('Found VAPID-related keys in environment:', vapidKeys);
+    console.log('VITE_VAPID_PUBLIC_KEY present:', !!process.env.VITE_VAPID_PUBLIC_KEY);
+    console.log('VAPID_PRIVATE_KEY present:', !!process.env.VAPID_PRIVATE_KEY);
+    console.log('------------------------');
+
     res.json({ 
       publicKey: process.env.VITE_VAPID_PUBLIC_KEY || '',
-      availableKeys: keys
+      availableKeys: vapidKeys
     });
   });
 

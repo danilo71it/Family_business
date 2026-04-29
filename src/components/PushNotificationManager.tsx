@@ -70,7 +70,8 @@ export function PushNotificationManager({ userId }: Props) {
       }
 
       if (!publicKey) {
-        throw new Error('Chiave VAPID pubblica non trovata. Controlla i Secrets (VITE_VAPID_PUBLIC_KEY).');
+        const diagnosticInfo = data?.availableKeys ? ` (Chiavi trovate sul server: ${data.availableKeys.join(', ')})` : ' (Nessuna chiave VAPID trovata sul server)';
+        throw new Error(`Chiave VAPID pubblica non trovata.${diagnosticInfo}. Assicurati di aver salvato i Secrets e prova a ricaricare la pagina.`);
       }
 
       const subscription = await registration.pushManager.subscribe({
