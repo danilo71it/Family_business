@@ -8,7 +8,6 @@ import {
 import { Transaction, FamilyGroup, TransactionType, RecurrenceFrequency } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
 import { addDays, addWeeks, addMonths, addYears, startOfMonth, endOfMonth } from 'date-fns';
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/googleCalendar';
 
 export function useFinance(groupId: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -125,14 +124,6 @@ export function useFinance(groupId: string | null) {
           data.parentTransactionId = parentId;
         }
 
-        // --- Google Calendar Sync ---
-        if (t.type === 'appointment') {
-          // Construct a temporary transaction for the formatter
-          const tempTx: any = { ...data, date: occurrenceDate };
-          const eventId = await createCalendarEvent(tempTx);
-          if (eventId) data.googleEventId = eventId;
-        }
-
         await addDoc(transactionsRef, data);
       }
     } catch (err) {
@@ -165,11 +156,6 @@ export function useFinance(groupId: string | null) {
     const cleanGroupId = groupId?.trim();
     if (!cleanGroupId) return;
     try {
-      // --- Google Calendar Sync ---
-      if (txData?.googleEventId) {
-        await deleteCalendarEvent(txData.googleEventId);
-      }
-      
       await deleteDoc(doc(db, 'groups', cleanGroupId, 'transactions', txId));
     } catch (err) {
       handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/${txId}`);
@@ -185,14 +171,7 @@ export function useFinance(groupId: string | null) {
       const snapshot = await getDocs(q);
       
       const batch = writeBatch(db);
-      for (const d of snapshot.docs) {
-        const data = d.data() as Transaction;
-        // --- Google Calendar Sync ---
-        if (data.googleEventId) {
-          await deleteCalendarEvent(data.googleEventId);
-        }
-        batch.delete(d.ref);
-      }
+      snapshot.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
     } catch (err) {
       handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/series/${parentTransactionId}`);
@@ -209,25 +188,8 @@ export function useFinance(groupId: string | null) {
       const dataToSave: any = { ...updates, updatedAt: serverTimestamp() };
       
       // Handle date conversion if present
-      const targetDate = updates.date || currentTx?.date;
       if (updates.date) {
         dataToSave.date = Timestamp.fromDate(updates.date);
-      }
-
-      // --- Google Calendar Sync ---
-      const type = updates.type || currentTx?.type;
-      if (type === 'appointment') {
-        const mergedTx = { ...currentTx, ...updates, date: targetDate } as Transaction;
-        if (currentTx?.googleEventId) {
-          await updateCalendarEvent(currentTx.googleEventId, mergedTx);
-        } else {
-          const eventId = await createCalendarEvent(mergedTx);
-          if (eventId) dataToSave.googleEventId = eventId;
-        }
-      } else if (currentTx?.googleEventId) {
-          // If it's no longer an appointment but has an event ID, delete it
-          await deleteCalendarEvent(currentTx.googleEventId);
-          dataToSave.googleEventId = deleteField();
       }
 
       // Logic for shifting future recurring dates

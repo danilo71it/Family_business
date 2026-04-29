@@ -36,6 +36,10 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if isOwner(userId) && isValidUser(incoming()) && 
                     incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'groupId']);
+      
+      match /push_subscriptions/{subId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Group Rules

@@ -94,12 +94,27 @@
         "shiftId": { "type": "string" }
       },
       "required": ["date"]
+    },
+    "PushSubscription": {
+      "title": "PushSubscription",
+      "description": "Web Push API subscription object",
+      "type": "object",
+      "properties": {
+        "subscription": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "userAgent": { "type": "string" }
+      },
+      "required": ["subscription"]
     }
   },
   "firestore": {
     "users/{userId}": {
       "schema": "User",
       "description": "Global user profiles"
+    },
+    "users/{userId}/push_subscriptions/{subId}": {
+      "schema": "PushSubscription",
+      "description": "User push notification subscriptions"
     },
     "groups/{groupId}": {
       "schema": "FamilyGroup",

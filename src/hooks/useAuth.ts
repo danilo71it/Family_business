@@ -35,7 +35,6 @@ export function useAuth() {
         }
       } else {
         setProfile(null);
-        localStorage.removeItem('google_access_token');
       }
       setLoading(false);
     });
@@ -45,12 +44,7 @@ export function useAuth() {
 
   const login = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const accessToken = credential?.accessToken;
-      if (accessToken) {
-        localStorage.setItem('google_access_token', accessToken);
-      }
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error('Error logging in:', error);
     }

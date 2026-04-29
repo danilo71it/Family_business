@@ -9,6 +9,7 @@ import { CalendarView } from './components/CalendarView';
 import { ShiftConfig } from './components/ShiftConfig';
 import { ShiftLegend } from './components/ShiftLegend';
 import { DailyPanel } from './components/DailyPanel';
+import { PushNotificationManager } from './components/PushNotificationManager';
 import { useWorkShifts } from './hooks/useWorkShifts';
 import { getShiftForDay } from './lib/shiftUtils';
 import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock, Settings, RefreshCw } from 'lucide-react';
@@ -225,26 +226,6 @@ export default function App() {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* Alerts Section (if any) */}
-        {alerts.length > 0 && (
-          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-4 overflow-x-auto no-scrollbar">
-            <div className="p-3 bg-white rounded-xl shadow-sm text-amber-500 h-fit">
-              <Bell size={20} />
-            </div>
-            <div className="flex gap-4">
-              {alerts.map(alert => (
-                <div key={alert.id} className="min-w-[200px] bg-white/50 p-3 rounded-xl border border-white/50">
-                  <p className="text-[10px] font-semibold uppercase text-amber-600">Scadenza {format(alert.date, 'dd MMM', { locale: it })}</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">{alert.category}</p>
-                  <p className="text-xs font-mono font-semibold text-gray-500">
-                    {alert.isUnknownAmount ? 'Importo Variabile' : alert.amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {viewMode === 'summary' ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
             <div className="flex items-center justify-between">
@@ -316,6 +297,8 @@ export default function App() {
             </div>
             
             <div className="p-6 space-y-6">
+              <PushNotificationManager userId={user?.uid} />
+              
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1">Azzeramento Dati</h3>
                 

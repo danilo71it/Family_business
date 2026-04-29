@@ -294,18 +294,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           </button>
 
           {/* Remind Toggle Button - Defaulted to OFF */}
-          <button
-            type="button"
-            onClick={() => setReminderEnabled(!reminderEnabled)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
-              reminderEnabled ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-            }`}
-          >
-            <Bell size={14} />
-            Remind
-          </button>
-
-          {/* Recurring Toggle Button - Moved to last */}
+          {/* Recurring Toggle Button */}
           <button
             type="button"
             onClick={() => setRecurring(!recurring)}
@@ -389,56 +378,6 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           </button>
         </div>
       )}
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Promemoria</label>
-          <div className="bg-gray-50 p-4 rounded-2xl space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={newReminderValue}
-                onChange={(e) => setNewReminderValue(e.target.value)}
-                className="w-16 px-3 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
-              />
-              <select
-                value={newReminderUnit}
-                onChange={(e) => setNewReminderUnit(e.target.value as any)}
-                className="flex-1 px-3 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="minutes">Minuti prima</option>
-                <option value="hours">Ore prima</option>
-                <option value="days">Giorni prima</option>
-              </select>
-              <button
-                type="button"
-                onClick={addReminder}
-                className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                <Plus size={20} />
-              </button>
-            </div>
-
-            {reminders.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {reminders.map((r, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-blue-100 text-blue-600">
-                    <Bell size={14} />
-                    <span className="text-xs font-bold uppercase">
-                      {r.value} {r.unit === 'minutes' ? 'Min' : r.unit === 'hours' ? 'Ore' : 'Gg'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeReminder(idx)}
-                      className="p-1 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         <div className="space-y-1">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Indirizzo</label>
