@@ -37,17 +37,28 @@ async function startServer() {
 
   app.use(express.json());
 
-  // 2. DIAGNOSTIC ROUTES - Using /api prefix which is more standard
-  app.get('/api/debug-vars', (req, res) => {
-    console.log('[DEBUG] /api/debug-vars hit');
+  // 2. DIAGNOSTIC ROUTES
+  const handleConfigCheck = (req: express.Request, res: express.Response) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    const priv = process.env.VAPID_PRIVATE_KEY || '';
+    
+    console.log(`[DEBUG] Config Check Triggered via ${req.url}`);
+    console.log(`[DEBUG] VITE_VAPID_PUBLIC_KEY present: ${!!process.env.VITE_VAPID_PUBLIC_KEY} (len: ${process.env.VITE_VAPID_PUBLIC_KEY?.length})`);
+    console.log(`[DEBUG] VAPID_PRIVATE_KEY present: ${!!process.env.VAPID_PRIVATE_KEY} (len: ${process.env.VAPID_PRIVATE_KEY?.length})`);
+
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({ 
       publicKey: pub,
       hasViteKey: !!process.env.VITE_VAPID_PUBLIC_KEY,
+      hasPrivateKey: !!priv,
       nodeEnv: process.env.NODE_ENV,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      availableEnvKeys: Object.keys(process.env).filter(k => k.includes('VAPID') || k.includes('VITE'))
     });
-  });
+  };
+
+  app.get('/api/debug-vars', handleConfigCheck);
+  app.get('/config-check', handleConfigCheck);
 
   app.get('/health', (req, res) => res.send('OK - Server is active'));
   

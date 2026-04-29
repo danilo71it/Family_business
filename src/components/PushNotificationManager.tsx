@@ -66,6 +66,14 @@ export function PushNotificationManager({ userId }: Props) {
             data = await res.json();
             console.log('Config from server:', data);
             publicKey = data.publicKey;
+            
+            if (!publicKey && data.availableEnvKeys) {
+              console.warn('Server environment keys detected:', data.availableEnvKeys);
+              const foundKey = data.availableEnvKeys.find((k: string) => k.toUpperCase().includes('VAPID') && k.toUpperCase().includes('PUBLIC'));
+              if (foundKey && foundKey !== 'VITE_VAPID_PUBLIC_KEY') {
+                throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
+              }
+            }
           } else {
             console.error('Server returned error status:', res.status);
             data = { fetchError: `Server status ${res.status} for /api/debug-vars` };
@@ -77,8 +85,16 @@ export function PushNotificationManager({ userId }: Props) {
       }
 
       if (!publicKey) {
-        let diagnosticInfo = (data && data.fetchError) ? ` (Errore: ${data.fetchError})` : ' (Chiave non trovata nei Secrets)';
-        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' e di aver cliccato 'Save'.`);
+        let diagnosticInfo = '';
+        if (data && data.availableEnvKeys) {
+          const keysFound = data.availableEnvKeys.join(', ');
+          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID o VITE trovata nei Secrets)';
+        } else if (data && data.fetchError) {
+          diagnosticInfo = ` (Errore caricamento: ${data.fetchError})`;
+        } else {
+          diagnosticInfo = ' (Impossibile contattare il server o chiave mancante)';
+        }
+        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto e di aver cliccato 'Save'.`);
       }
 
       console.log('Using VAPID key for subscription:', publicKey);
