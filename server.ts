@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import webpush from 'web-push';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -11,56 +12,48 @@ const vapidKeys = {
   privateKey: process.env.VAPID_PRIVATE_KEY || ''
 };
 
-console.log('--- STARTUP VAPID CHECK ---');
-console.log('VITE_VAPID_PUBLIC_KEY length:', vapidKeys.publicKey.length);
-console.log('VAPID_PRIVATE_KEY length:', vapidKeys.privateKey.length);
-console.log('Available env keys:', Object.keys(process.env).filter(k => k.includes('VAPID') || k.includes('VITE')));
-console.log('---------------------------');
-
 if (vapidKeys.publicKey && vapidKeys.privateKey) {
-  webpush.setVapidDetails(
-    'mailto:danilo.sbergia@gmail.com',
-    vapidKeys.publicKey,
-    vapidKeys.privateKey
-  );
+  try {
+    webpush.setVapidDetails(
+      'mailto:danilo.sbergia@gmail.com',
+      vapidKeys.publicKey,
+      vapidKeys.privateKey
+    );
+  } catch (err) {
+    console.error('Failed to set VAPID details:', err);
+  }
 }
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. PRIMARY LOGGER - MUST BE FIRST
+  app.use(cors());
+  app.use(express.json());
+
+  // 1. PRIMARY LOGGER
   app.use((req, res, next) => {
-    console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
+    if (req.url !== '/health') {
+      console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
+    }
     next();
   });
-
-  app.use(express.json());
 
   // 2. DIAGNOSTIC ROUTES
   const handleConfigCheck = (req: express.Request, res: express.Response) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    const priv = process.env.VAPID_PRIVATE_KEY || '';
-    
-    console.log(`[DEBUG] Config Check Triggered via ${req.url}`);
-    console.log(`[DEBUG] VITE_VAPID_PUBLIC_KEY present: ${!!process.env.VITE_VAPID_PUBLIC_KEY} (len: ${process.env.VITE_VAPID_PUBLIC_KEY?.length})`);
-    console.log(`[DEBUG] VAPID_PRIVATE_KEY present: ${!!process.env.VAPID_PRIVATE_KEY} (len: ${process.env.VAPID_PRIVATE_KEY?.length})`);
-
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json({ 
       publicKey: pub,
       hasViteKey: !!process.env.VITE_VAPID_PUBLIC_KEY,
-      hasPrivateKey: !!priv,
       nodeEnv: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-      availableEnvKeys: Object.keys(process.env).filter(k => k.includes('VAPID') || k.includes('VITE'))
+      availableKeys: Object.keys(process.env).filter(k => k.includes('VAPID'))
     });
   };
 
-  app.get('/api/debug-vars', handleConfigCheck);
+  app.get('/api/push-config', handleConfigCheck);
   app.get('/config-check', handleConfigCheck);
-
-  app.get('/health', (req, res) => res.send('OK - Server is active'));
+  app.get('/health', (req, res) => res.send('OK'));
   
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;

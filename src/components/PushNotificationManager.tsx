@@ -52,31 +52,32 @@ export function PushNotificationManager({ userId }: Props) {
     try {
       const registration = await navigator.serviceWorker.ready;
       
-      let publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      let publicKey = (import.meta as any).env.VITE_VAPID_PUBLIC_KEY;
       let data: any = null;
       
-      console.log('--- DEBUG CLIENT ---');
-      console.log('Initial VAPID key from env:', publicKey);
+      console.log('--- PUSH DIAGNOSTIC ---');
+      console.log('Build-time VAPID key:', publicKey);
       
       // Fallback: fetch from server if env is empty
-      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
+      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined') {
         try {
-          const res = await fetch(`/api/debug-vars?t=${Date.now()}`);
-          if (res.ok) {
-            data = await res.json();
-            console.log('Config from server:', data);
-            publicKey = data.publicKey;
-            
-            if (!publicKey && data.availableEnvKeys) {
-              console.warn('Server environment keys detected:', data.availableEnvKeys);
-              const foundKey = data.availableEnvKeys.find((k: string) => k.toUpperCase().includes('VAPID') && k.toUpperCase().includes('PUBLIC'));
-              if (foundKey && foundKey !== 'VITE_VAPID_PUBLIC_KEY') {
-                throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
+          // Try multiple endpoints
+          const endpoints = ['/api/push-config', '/config-check'];
+          for (const ep of endpoints) {
+            console.log(`Checking config at ${ep}...`);
+            const res = await fetch(`${ep}?t=${Date.now()}`);
+            if (res.ok) {
+              const result = await res.json();
+              console.log(`Config from ${ep}:`, result);
+              if (result.publicKey) {
+                publicKey = result.publicKey;
+                data = result;
+                break;
               }
+            } else {
+              console.warn(`Endpoint ${ep} returned ${res.status}`);
+              data = { fetchError: `Server status ${res.status} for ${ep}` };
             }
-          } else {
-            console.error('Server returned error status:', res.status);
-            data = { fetchError: `Server status ${res.status} for /api/debug-vars` };
           }
         } catch (fetchErr: any) {
           console.error('Failed to fetch config from server:', fetchErr);
@@ -84,17 +85,17 @@ export function PushNotificationManager({ userId }: Props) {
         }
       }
 
-      if (!publicKey) {
+      if (!publicKey || publicKey === 'undefined') {
         let diagnosticInfo = '';
-        if (data && data.availableEnvKeys) {
-          const keysFound = data.availableEnvKeys.join(', ');
-          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID o VITE trovata nei Secrets)';
+        if (data && data.availableKeys) {
+          const keysFound = data.availableKeys.join(', ');
+          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID trovata nei Secrets)';
         } else if (data && data.fetchError) {
-          diagnosticInfo = ` (Errore caricamento: ${data.fetchError})`;
+          diagnosticInfo = ` (${data.fetchError})`;
         } else {
           diagnosticInfo = ' (Impossibile contattare il server o chiave mancante)';
         }
-        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto e di aver cliccato 'Save'.`);
+        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' e di aver cliccato 'Save'.`);
       }
 
       console.log('Using VAPID key for subscription:', publicKey);
