@@ -52,6 +52,12 @@ export function PushNotificationManager({ userId }: Props) {
     try {
       console.log('Inizio registrazione push...');
       
+      // Controllo se siamo su GitHub Pages (servizio statico senza backend)
+      const isStaticEnv = window.location.hostname.includes('github.io');
+      if (isStaticEnv) {
+        throw new Error("Attenzione: Sei su GitHub Pages. Le notifiche NON possono funzionare qui perché manca il server (backend). Usa l'URL dell'App condivisa di AI Studio.");
+      }
+
       if (!('serviceWorker' in navigator)) {
         throw new Error("Il browser non supporta i Service Worker.");
       }
@@ -60,31 +66,38 @@ export function PushNotificationManager({ userId }: Props) {
       console.log('Controllo Service Worker...');
       const registration = await navigator.serviceWorker.ready;
       
-      // Piccolo check aggiuntivo per assicurarsi che sia "active"
       if (!registration.active) {
         console.log('SW pronto ma non ancora attivo, attendo un istante...');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
+      
+      if (!registration.active) {
+        throw new Error("Service Worker non attivo. Svuota la cache e riprova.");
+      }
       console.log('Service Worker pronto e attivo.');
       
-      // 2. Recupero Chiave VAPID dal server con URL assoluto per evitare problemi su alcuni browser mobile
+      // 2. Recupero Chiave VAPID dal server con URL assoluto
       let publicKey = '';
       try {
         const url = `${window.location.origin}/api/vapid-config?t=${Date.now()}`;
         console.log('Recupero chiave VAPID da:', url);
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`Status ${res.status}`);
+        
+        if (!res.ok) {
+          if (res.status === 404) throw new Error("Il backend non risponde. Assicurati di non essere su un sito statico.");
+          throw new Error(`Errore server: ${res.status}`);
+        }
         
         const config = await res.json();
         if (config.publicKey && config.publicKey.length > 20) {
           publicKey = config.publicKey;
           console.log('Chiave VAPID ricevuta correttamente');
         } else {
-          throw new Error("Chiave vuota o non valida. Verifica i Secrets configurati.");
+          throw new Error("Chiave non valida/vuota nei Secrets del server.");
         }
       } catch (err: any) {
         console.error('Errore fetch VAPID:', err);
-        throw new Error(`Connessione server fallita: ${err.message}`);
+        throw new Error(`Connessione backend fallita: ${err.message}`);
       }
 
       console.log('Sottoscrizione in corso con chiave:', publicKey.substring(0, 10) + '...');
