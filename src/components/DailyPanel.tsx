@@ -385,6 +385,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
       amount: 0,
       isEstimate: false,
       recurring: false,
+      type: 'appointment',
       reminderEnabled: reminders.length > 0
     });
     setIsSubmitting(false);

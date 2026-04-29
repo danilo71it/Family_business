@@ -72,11 +72,17 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
   useEffect(() => {
     const checkReminders = () => {
       const now = new Date();
+      console.log('NotificationService: Checking reminders for', transactions.length, 'transactions at', now.toLocaleTimeString());
       
       transactions.forEach(async (tx) => {
-        if (tx.type !== 'appointment' || !tx.reminders || tx.reminders.length === 0) return;
+        // Broaden the check to find potential appointments
+        const isAppointment = tx.type === 'appointment' || (tx.reminders && tx.reminders.length > 0 && tx.time);
+        
+        if (!isAppointment || !tx.reminders || tx.reminders.length === 0) return;
         if (!isSameDay(tx.date, now)) return;
         if (!tx.time) return;
+
+        console.log('NotificationService: Found candidate transaction:', tx.category, 'at', tx.time);
 
         // Parse appointment time
         const [hours, minutes] = tx.time.split(':').map(Number);
@@ -95,13 +101,16 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
           else if (reminder.unit === 'hours') triggerTime = subHours(appointmentTime, reminder.value);
           else if (reminder.unit === 'days') triggerTime = subDays(appointmentTime, reminder.value);
 
-          // If the trigger time is now or in the past (but not too far in the past, e.g., within the last 5 mins)
+          // If the trigger time is now or in the past (but not too far in the past)
           const diffSeconds = (now.getTime() - triggerTime.getTime()) / 1000;
           
-          if (diffSeconds >= 0 && diffSeconds < 120) { // Catch-up window of 2 minutes
+          console.log(`NotificationService: Checking reminder ${reminder.value} ${reminder.unit} for ${tx.category}. TriggerTime: ${triggerTime.toLocaleTimeString()}, DiffSeconds: ${diffSeconds}`);
+
+          if (diffSeconds >= -30 && diffSeconds < 300) { // Slightly broader window (30s before to 5m after)
+             console.log('NotificationService: TRIGGERED reminder for', tx.category);
              triggerNotification(
                `PROMEMORIA: ${tx.category}`,
-               `L'appuntamento è previsto tra ${reminder.value} ${reminder.unit === 'minutes' ? 'minuti' : reminder.unit === 'hours' ? 'ore' : 'giorni'}${tx.address ? ' presso ' + tx.address : ''}`,
+               `L'appuntamento è previsto alle ${tx.time}${tx.address ? ' presso ' + tx.address : ''}`,
                tx.id,
                tx
              );
@@ -112,7 +121,11 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
         });
 
         if (modified) {
-          await onUpdateTransaction(tx.id, { reminders: newReminders });
+          try {
+            await onUpdateTransaction(tx.id, { reminders: newReminders });
+          } catch (err) {
+            console.error('NotificationService: Failed to mark reminder as triggered:', err);
+          }
         }
       });
     };
@@ -137,14 +150,35 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
               <Bell className="animate-bounce" />
               <p className="text-sm font-bold">Attiva le notifiche per non perdere gli appuntamenti</p>
             </div>
-            <button 
-              onClick={requestPermission}
-              className="bg-white text-indigo-600 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/90 transition-all"
-            >
-              ATTIVA ORA
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={requestPermission}
+                className="flex-1 bg-white text-indigo-600 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/90 transition-all"
+              >
+                ATTIVA ORA
+              </button>
+              <button 
+                onClick={() => triggerNotification('TEST NOTIFICA', 'Se vedi questo messaggio, i promemoria funzionano correttamente!', 'test', { category: 'Test', time: 'Ora', address: 'Qui' } as any)}
+                className="px-4 bg-white/20 text-white py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/30 transition-all"
+              >
+                TEST
+              </button>
+            </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Small settings button for testing when already granted */}
+      {permission === 'granted' && activeAlerts.length === 0 && (
+         <div className="fixed bottom-24 right-4 z-[100]">
+            <button 
+              onClick={() => triggerNotification('TEST NOTIFICA', 'Test dei promemoria completato con successo!', 'test', { category: 'Test', time: 'Ora' } as any)}
+              className="p-3 bg-white shadow-lg rounded-2xl text-indigo-600 hover:scale-105 transition-transform border border-indigo-50"
+              title="Test Promemoria"
+            >
+              <Bell size={20} />
+            </button>
+         </div>
       )}
 
       {/* In-app Alerts List */}
