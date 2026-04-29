@@ -50,67 +50,37 @@ export function PushNotificationManager({ userId }: Props) {
     if (!userId) return;
     setIsSubscribing(true);
     try {
-      console.log('Push initiation...');
+      console.log('Inizio registrazione push...');
       
-      // Controllo SW
       if (!('serviceWorker' in navigator)) {
-        throw new Error("Il tuo browser non supporta i Service Worker.");
+        throw new Error("Il browser non supporta i Service Worker.");
       }
 
-      let registration = await navigator.serviceWorker.getRegistration();
-      if (!registration) {
-        console.log('No SW registration found, registering now...');
-        registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      }
-
-      // Attendiamo che sia attivo con un timeout personalizzato
-      const checkActive = async (reg: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> => {
-        if (reg.active) return reg;
-        return new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error("Timeout attivazione Service Worker. Ricarica la pagina.")), 15000);
-          const interval = setInterval(() => {
-            if (reg.active) {
-              clearInterval(interval);
-              clearTimeout(timeout);
-              resolve(reg);
-            }
-          }, 500);
-        });
-      };
-
-      registration = await checkActive(registration);
-      console.log('Service Worker is active and ready.');
+      // 1. Assicuriamoci che il Service Worker sia pronto (senza timeout custom bloccante)
+      // navigator.serviceWorker.ready è la promessa standard più robusta
+      const registration = await navigator.serviceWorker.ready;
+      console.log('Service Worker pronto:', registration.active?.state);
       
+      // 2. Recupero Chiave VAPID dal server (unico endpoint pulito)
       let publicKey = '';
-      const origin = window.location.origin;
-      const endpoints = [
-        `${origin}/api/v1/vapid-public-key`,
-        `${origin}/get-vapid-key`,
-        `${origin}/keys`
-      ];
-      
-      console.log('Fetching VAPID key...');
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url + '?t=' + Date.now());
-          if (res.ok) {
-            const result = await res.json();
-            if (result.publicKey && result.publicKey.length > 20) {
-              publicKey = result.publicKey;
-              console.log(`Key obtained from ${url}`);
-              break;
-            }
-          }
-        } catch (e: any) {
-          console.warn(`Fetch ${url} failed:`, e.message);
+      try {
+        console.log('Recupero chiave VAPID da /api/vapid-config...');
+        const res = await fetch('/api/vapid-config?t=' + Date.now());
+        if (!res.ok) throw new Error(`Errore HTTP ${res.status}`);
+        
+        const config = await res.json();
+        if (config.publicKey && config.publicKey.length > 20) {
+          publicKey = config.publicKey;
+          console.log('Chiave VAPID ricevuta correttamente');
+        } else {
+          throw new Error("Il server ha restituito una chiave vuota o non valida. Verifica i Secrets.");
         }
+      } catch (err: any) {
+        console.error('Errore fetch VAPID:', err);
+        throw new Error(`Impossibile recuperare la chiave dal server: ${err.message}`);
       }
 
-      if (!publicKey) {
-        throw new Error("Impossibile recuperare la chiave di sicurezza dal server. Controlla la connessione o ricarica la pagina.");
-      }
-
-      console.log('Using VAPID key for subscription:', publicKey);
+      console.log('Sottoscrizione in corso con chiave:', publicKey.substring(0, 10) + '...');
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
