@@ -52,7 +52,9 @@ export function PushNotificationManager({ userId }: Props) {
       const registration = await navigator.serviceWorker.ready;
       
       const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      if (!publicKey) throw new Error('VAPID Public Key missing');
+      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
+        throw new Error('Chiave VAPID pubblica non configurata nei Secrets.');
+      }
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -72,9 +74,13 @@ export function PushNotificationManager({ userId }: Props) {
       setHasSubscription(true);
       localStorage.setItem('push_subscription', JSON.stringify(subObj));
       console.log('Push subscription successful');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Push subscription failed:', error);
-      alert('Impossibile attivare le notifiche push. Assicurati di aver dato i permessi nel browser.');
+      if (Notification.permission === 'denied') {
+        alert('Hai bloccato le notifiche. Sbloccale cliccando sul lucchetto nella barra dell\'indirizzo del browser.');
+      } else {
+        alert(`Errore: ${error.message || 'Impossibile attivare le notifiche push.'}`);
+      }
     } finally {
       setIsSubscribing(false);
     }
