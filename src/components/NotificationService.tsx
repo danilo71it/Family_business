@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Transaction } from '../types';
 import { isSameDay, subMinutes, subHours, subDays } from 'date-fns';
-import { Bell, X, Volume2 } from 'lucide-react';
+import { Bell, X, Volume2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -21,16 +21,28 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [activeAlerts, setActiveAlerts] = useState<ActiveAlert[]>([]);
   const [mounted, setMounted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const swRegistration = useRef<ServiceWorkerRegistration | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
+
     if ('Notification' in window) {
       setPermission(Notification.permission);
     } else {
       setPermission('denied');
     }
     audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+    // Register Service Worker for background notifications
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+          swRegistration.current = reg;
+        })
+        .catch(err => console.error('SW registration failed:', err));
+    }
   }, []);
 
   const playSound = () => {
@@ -43,13 +55,25 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
   };
 
   const triggerNotification = (title: string, message: string, txId: string, item: Partial<Transaction>) => {
+    // 1. In-app Alert (sempre visibile se l'app è aperta)
     setActiveAlerts(prev => {
       if (txId !== 'test' && prev.some(a => a.id.startsWith(txId!) && a.title === title)) return prev;
       return [{ id: `${txId}-${Date.now()}`, title, time: item.time, message }, ...prev].slice(0, 3);
     });
 
-    if (permission === 'granted' && 'Notification' in window) {
-      try { new Notification(title, { body: message }); } catch (e) {}
+    // 2. Notifica Nativa (usa il Service Worker per miglior supporto background)
+    if (permission === 'granted') {
+      if (swRegistration.current) {
+        swRegistration.current.showNotification(title, {
+          body: message,
+          icon: 'https://cdn-icons-png.flaticon.com/512/5552/5552462.png',
+          vibrate: [200, 100, 200]
+        }).catch(() => {
+          try { new Notification(title, { body: message }); } catch (e) {}
+        });
+      } else if ('Notification' in window) {
+        try { new Notification(title, { body: message }); } catch (e) {}
+      }
     }
     playSound();
   };
@@ -99,6 +123,26 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
 
   return createPortal(
     <div className="fixed inset-0 pointer-events-none z-[99999] flex flex-col items-center p-4">
+      {/* Guida Installazione (Solo se non standalone e su mobile) */}
+      {!isStandalone && mounted && (
+        <div className="absolute top-20 left-4 right-4 pointer-events-auto sm:max-w-xs sm:left-auto sm:right-6">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl shadow-xl text-amber-900"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider mb-1">Attiva notifiche background</p>
+                <p className="text-xs leading-relaxed opacity-80">Per ricevere avvisi a schermo spento, clicca <b>Condividi</b> e poi <b>"Aggiungi a Home"</b>.</p>
+              </div>
+              <button onClick={() => setIsStandalone(true)} className="p-1 -mr-2 -mt-2 opacity-40"><X size={16} /></button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <div className="absolute bottom-24 right-4 pointer-events-auto">
         <button 
           onClick={() => triggerNotification('TEST', 'Il sistema è pronto!', 'test', { time: 'Ora' })}

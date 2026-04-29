@@ -1,17 +1,20 @@
 {
-  "name": "Contabilità Pro",
-  "short_name": "Contabilità",
-  "description": "Gestione finanze familiari semplificata.",
-  "start_url": ".",
+  "name": "Finance Shift Calendar",
+  "short_name": "FinanceShift",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#4f46e5",
+  "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/781/781760.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/5552/5552462.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5552/5552462.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     }
   ]
 }
