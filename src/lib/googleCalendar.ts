@@ -24,6 +24,10 @@ export async function createCalendarEvent(tx: Transaction): Promise<string | nul
 
     if (!response.ok) {
       const err = await response.json();
+      if (response.status === 403 || response.status === 401) {
+        console.error('Permessi Google Calendar insufficienti o scaduti.');
+        localStorage.removeItem('google_access_token');
+      }
       console.error('Google Calendar Error:', err);
       return null;
     }
