@@ -130,14 +130,18 @@ export function PushNotificationManager({ userId }: Props) {
         </button>
       )}
       {hasSubscription && (
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md border border-green-100">Attive</span>
-          <button 
-            onClick={sendTest}
-            className="px-3 py-2 bg-white border border-indigo-200 text-indigo-600 text-[10px] font-bold uppercase rounded-lg shadow-sm hover:bg-indigo-50 transition-all active:scale-95"
-          >
-            Invia Test
-          </button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md border border-green-100">
+              Notifiche Attive
+            </span>
+            <button 
+              onClick={sendTest}
+              className="px-4 py-2 bg-white border-2 border-indigo-200 text-indigo-600 text-[10px] font-black uppercase rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all active:scale-95 flex items-center gap-2"
+            >
+              Invia Test Ora
+            </button>
+          </div>
         </div>
       )}
     </div>
