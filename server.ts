@@ -28,36 +28,23 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. ROTTE CRITICHE E FILE STATICI
+  // 1. ROTTE API E CRITICHE (Sempre al top)
   app.get('/sw.js', (req, res) => {
     const swPath = path.join(process.cwd(), 'public', 'sw.js');
-    console.log(`[SW_SERVE] Serving SW from: ${swPath}`);
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Service-Worker-Allowed', '/');
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(swPath);
   });
 
   app.get('/api/vapid-config', (req, res) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID] Serving key: ${pub ? 'FOUND' : 'NOT FOUND'} to ${req.ip}`);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.json({ publicKey: pub });
   });
 
   app.get('/health', (req, res) => res.send('OK'));
 
-  app.use(express.static(path.join(process.cwd(), 'public')));
-
-  // 2. Middleware generali
-  app.use(cors());
-  app.use(express.json());
-
-  app.use((req, res, next) => {
-    console.log(`[REQUEST] ${req.method} ${req.url}`);
-    next();
-  });
-  
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;
     try {
@@ -69,6 +56,18 @@ async function startServer() {
     }
   });
 
+  // 2. Middleware generali
+  app.use(cors());
+  app.use(express.json());
+
+  app.use((req, res, next) => {
+    if (req.url.startsWith('/api') || req.url === '/sw.js') {
+      console.log(`[REQ] ${req.method} ${req.url}`);
+    }
+    next();
+  });
+  
+  // 3. Gestione file statici e Frontend
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -77,7 +76,13 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    const publicPath = path.join(process.cwd(), 'public');
+    
+    // Serve file da dist E da public
     app.use(express.static(distPath));
+    app.use(express.static(publicPath));
+    
+    // Catch-all per SPA
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

@@ -55,7 +55,7 @@ export function PushNotificationManager({ userId }: Props) {
       // Controllo se siamo su GitHub Pages (servizio statico senza backend)
       const isStaticEnv = window.location.hostname.includes('github.io');
       if (isStaticEnv) {
-        throw new Error("ATTENZIONE: Stai usando GitHub Pages. Questo servizio è statico e NON supporta il backend necessario per le notifiche push. Per favore, usa l'URL 'Shared App' o 'Development App' fornito da AI Studio.");
+        throw new Error("⚠️ STAI USANDO GITHUB PAGES: Questo servizio è STATICO e NON supporta le funzionalità di backend necessarie per le notifiche push. \n\nPer attivare le notifiche, devi usare l'URL di AI Studio (Shared App).");
       }
 
       if (!('serviceWorker' in navigator)) {
