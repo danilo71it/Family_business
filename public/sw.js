@@ -16,8 +16,8 @@ self.addEventListener('message', (event) => {
     event.waitUntil(
       self.registration.showNotification(title, {
         body: body,
-        icon: 'https://cdn-icons-png.flaticon.com/512/5552/5552462.png',
-        badge: 'https://cdn-icons-png.flaticon.com/512/5552/5552462.png',
+        icon: 'https://cdn-icons-png.flaticon.com/512/781/781760.png',
+        badge: 'https://cdn-icons-png.flaticon.com/512/781/781760.png',
         vibrate: [200, 100, 200]
       })
     );

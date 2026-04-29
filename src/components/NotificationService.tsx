@@ -38,7 +38,7 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
 
     // Register Service Worker for background notifications
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('./sw.js')
         .then(reg => {
           swRegistration.current = reg;
         })
@@ -67,7 +67,7 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
       if (swRegistration.current) {
         swRegistration.current.showNotification(title, {
           body: message,
-          icon: 'https://cdn-icons-png.flaticon.com/512/5552/5552462.png',
+          icon: 'https://cdn-icons-png.flaticon.com/512/781/781760.png',
           vibrate: [200, 100, 200]
         }).catch(() => {
           try { new Notification(title, { body: message }); } catch (e) {}
