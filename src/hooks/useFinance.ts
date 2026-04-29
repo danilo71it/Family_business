@@ -41,9 +41,9 @@ export function useFinance(groupId: string | null) {
         return {
           id: doc.id,
           ...data,
-          date: (data.date as Timestamp).toDate(),
-          createdAt: (data.createdAt as Timestamp).toDate(),
-          updatedAt: (data.updatedAt as Timestamp).toDate(),
+          date: data.date ? (data.date as Timestamp).toDate() : new Date(),
+          createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
+          updatedAt: data.updatedAt ? (data.updatedAt as Timestamp).toDate() : new Date(),
         } as Transaction;
       });
       setTransactions(docs);
@@ -62,6 +62,9 @@ export function useFinance(groupId: string | null) {
     category: string;
     description: string;
     note?: string;
+    address?: string;
+    time?: string;
+    reminders?: any[];
     date: Date;
     userId: string;
     isEstimate: boolean;
@@ -100,6 +103,9 @@ export function useFinance(groupId: string | null) {
           category: t.category,
           description: t.description || '',
           note: t.note || '',
+          address: t.address || '',
+          time: t.time || '',
+          reminders: t.reminders || [],
           date: Timestamp.fromDate(occurrenceDate),
           userId: t.userId,
           groupId: cleanGroupId,
@@ -187,17 +193,20 @@ export function useFinance(groupId: string | null) {
           const timeDiff = updates.date.getTime() - updates.originalDate.getTime();
           
           const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
+          const originalDateTs = updates.originalDate instanceof Date ? Timestamp.fromDate(updates.originalDate) : updates.originalDate;
+          
           const q = query(
             transactionsRef, 
             where('parentTransactionId', '==', currentTx.parentTransactionId),
-            where('date', '>', Timestamp.fromDate(updates.originalDate))
+            where('date', '>', originalDateTs)
           );
           
           const snapshot = await getDocs(q);
           const batch = writeBatch(db);
           
           snapshot.docs.forEach(doc => {
-            const oldDate = (doc.data().date as Timestamp).toDate();
+            const rawDate = doc.data().date;
+            const oldDate = rawDate ? (rawDate as Timestamp).toDate() : new Date();
             const newDate = new Date(oldDate.getTime() + timeDiff);
             batch.update(doc.ref, { 
               date: Timestamp.fromDate(newDate),

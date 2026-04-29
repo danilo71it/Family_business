@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff, StickyNote } from 'lucide-react';
+import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff, StickyNote, Clock } from 'lucide-react';
 import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
 
@@ -20,6 +20,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
   const [description, setDescription] = useState(initialData?.description || '');
   const [time, setTime] = useState(initialData?.time || '');
   const [note, setNote] = useState(initialData?.note || '');
+  const [address, setAddress] = useState(initialData?.address || '');
   const [date, setDate] = useState(initialData ? format(initialData.date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
   
   // Update state when initialData or defaultDate changes
@@ -31,6 +32,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       setDescription(initialData.description || '');
       setTime(initialData.time || '');
       setNote(initialData.note || '');
+      setAddress(initialData.address || '');
       setDate(format(initialData.date, 'yyyy-MM-dd'));
       setIsEstimate(initialData.isEstimate || false);
       setRecurring(initialData.recurring || false);
@@ -127,7 +129,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
       category: category.trim() || (note.trim() && actualType === 'note' ? 'Nota' : ''),
       description: description,
       note: note.trim(),
-      address: initialData?.address || '',
+      address: address.trim(),
       time: time,
       reminders: initialData?.reminders || [],
       date: selectedDate,
@@ -374,8 +376,38 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
         </div>
       )}
 
-      <div className="space-y-1">
-        <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Note</label>
+        <div className="space-y-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Indirizzo</label>
+          <div className="relative">
+            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Via, Città..."
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Orario</label>
+          <div className="relative">
+            <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => {
+                setTime(e.target.value);
+                e.target.blur();
+              }}
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Note</label>
         <div className="relative">
           <StickyNote size={18} className="absolute left-4 top-3 text-gray-400" />
           <textarea

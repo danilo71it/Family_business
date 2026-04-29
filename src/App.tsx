@@ -9,6 +9,7 @@ import { CalendarView } from './components/CalendarView';
 import { ShiftConfig } from './components/ShiftConfig';
 import { ShiftLegend } from './components/ShiftLegend';
 import { DailyPanel } from './components/DailyPanel';
+import { NotificationService } from './components/NotificationService';
 import { useWorkShifts } from './hooks/useWorkShifts';
 import { getShiftForDay } from './lib/shiftUtils';
 import { LogOut, Plus, Users, Wallet, Loader2, LayoutGrid, Calendar as CalendarIcon, Bell, X, Trash2, AlertCircle as AlertIcon, Clock, Settings, RefreshCw } from 'lucide-react';
@@ -392,6 +393,11 @@ export default function App() {
           onClose={() => setIsShiftConfigOpen(false)}
         />
       )}
+
+      <NotificationService 
+        transactions={transactions}
+        onUpdateTransaction={updateTransaction}
+      />
     </div>
   );
 }

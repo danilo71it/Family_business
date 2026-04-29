@@ -327,6 +327,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
   const [category, setCategory] = useState(initialData?.category || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [address, setAddress] = useState(initialData?.address || '');
+  const [lastSelectedAddress, setLastSelectedAddress] = useState(initialData?.address || '');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [time, setTime] = useState(initialData?.time || '');
@@ -337,7 +338,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
 
   // Address lookup debounced
   useEffect(() => {
-    if (address.length < 3) {
+    if (address.length < 3 || address === lastSelectedAddress) {
       setSuggestions([]);
       return;
     }
@@ -354,12 +355,12 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [address]);
+  }, [address, lastSelectedAddress]);
 
   const addReminder = () => {
     const val = parseInt(newReminderValue);
     if (!isNaN(val)) {
-      setReminders([...reminders, { value: val, unit: newReminderUnit }]);
+      setReminders([...reminders, { value: val, unit: newReminderUnit, triggered: false }]);
     }
   };
 
@@ -371,12 +372,16 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
     e.preventDefault();
     if (!category.trim()) return;
     setIsSubmitting(true);
+    
+    // Reset or ensure triggered is false on new/edited reminders
+    const updatedReminders = reminders.map(r => ({ ...r, triggered: false }));
+
     await onSave({
       category: category.trim(),
       description: description.trim(),
       address: address.trim(),
       time,
-      reminders,
+      reminders: updatedReminders,
       amount: 0,
       isEstimate: false,
       recurring: false,
@@ -437,6 +442,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
                   type="button"
                   onClick={() => {
                     setAddress(s.display_name);
+                    setLastSelectedAddress(s.display_name);
                     setShowSuggestions(false);
                   }}
                   className="w-full px-4 py-2 text-left hover:bg-indigo-50 transition-colors text-sm border-b border-gray-50 last:border-none flex items-start gap-3"
@@ -477,7 +483,11 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
               <input 
                 type="time" 
                 value={time} 
-                onChange={e => setTime(e.target.value)}
+                onChange={e => {
+                  setTime(e.target.value);
+                  // Auto-blur after change to potentially close mobile picker
+                  e.target.blur();
+                }}
                 className="w-full pl-10 pr-2 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold focus:ring-1 focus:ring-indigo-500 h-10"
               />
             </div>

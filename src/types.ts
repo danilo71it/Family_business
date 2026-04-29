@@ -6,6 +6,7 @@ export type ReminderUnit = 'minutes' | 'hours' | 'days';
 export interface Reminder {
   value: number;
   unit: ReminderUnit;
+  triggered?: boolean;
 }
 
 export interface UserProfile {

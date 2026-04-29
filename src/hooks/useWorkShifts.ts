@@ -42,7 +42,7 @@ export function useWorkShifts(groupId: string | null) {
         const data = doc.data();
         setCycle({
           shiftIds: data.shiftIds,
-          startDate: (data.startDate as Timestamp).toDate()
+          startDate: data.startDate ? (data.startDate as Timestamp).toDate() : new Date()
         });
       } else {
         setCycle(null);
@@ -55,7 +55,7 @@ export function useWorkShifts(groupId: string | null) {
       const docs = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
-          date: (data.date as Timestamp).toDate(),
+          date: data.date ? (data.date as Timestamp).toDate() : new Date(),
           shiftId: data.shiftId
         } as ShiftOverride;
       });

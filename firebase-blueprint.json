@@ -25,6 +25,7 @@
         "description": { "type": "string" },
         "note": { "type": "string" },
         "address": { "type": "string" },
+        "time": { "type": "string" },
         "reminders": { 
           "type": "array", 
           "items": { 
