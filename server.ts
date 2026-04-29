@@ -28,33 +28,27 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. General Middleware - MUST BE AT THE TOP
+  // 1. ROTTE CRITICHE - Prima di ogni altra cosa
+  app.get('/api/v1/vapid-public-key', (req, res) => {
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    console.log(`[VAPID_SERVE] Request from ${req.ip}. Key found: ${!!pub}`);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json({ publicKey: pub, status: 'ok' });
+  });
+
+  app.get('/health', (req, res) => res.send('OK'));
+
+  // 2. Middleware generali
   app.use(cors());
   app.use(express.json());
 
-  // Log di ogni richiesta per debugging reale
   app.use((req, res, next) => {
-    if (req.url.startsWith('/api') || req.url.includes('check')) {
-      console.log(`[DEBUG SERV] ${req.method} ${req.url} - Origin: ${req.get('origin')}`);
+    if (req.url.includes('api') || req.url.includes('key')) {
+      console.log(`[DEBUG] ${req.method} ${req.url}`);
     }
     next();
   });
-
-  // --- ROTTE DI CONFIGURAZIONE ---
-  app.get('/api/va-keys', (req, res) => {
-    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID] Response for keys. Found: ${!!pub} (Len: ${pub.length})`);
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.json({ publicKey: pub, status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  app.get('/config-check', (req, res) => {
-    res.redirect('/api/va-keys');
-  });
-  // --- FINE ROTTE PRIORITÀ ---
-
-  app.get('/health', (req, res) => res.send('OK'));
   
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;

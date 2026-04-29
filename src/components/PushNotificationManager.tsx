@@ -61,26 +61,24 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined' || publicKey.length < 20) {
         try {
-          console.log('Fetching keys from server at /api/va-keys...');
-          const res = await fetch('/api/va-keys?t=' + Date.now(), {
-            headers: { 'Accept': 'application/json' }
-          });
+          console.log('Fetching keys from server at /api/v1/vapid-public-key...');
+          const res = await fetch('/api/v1/vapid-public-key?t=' + Date.now());
           
           if (res.ok) {
             const result = await res.json();
-            console.log('Key received from server:', result);
+            console.log('Key received from server:', !!result.publicKey);
             if (result.publicKey) {
               publicKey = result.publicKey;
             } else {
-              data = { error: 'Server returned empty publicKey', result };
+              data = { error: 'Empty publicKey in server response' };
             }
           } else {
             console.error('Server error status:', res.status);
-            data = { error: `Server status ${res.status}` };
+            data = { error: `HTTP ${res.status}` };
           }
         } catch (fetchErr: any) {
           console.error('Fetch exception:', fetchErr);
-          data = { error: `Fetch exception: ${fetchErr.message}` };
+          data = { error: fetchErr.message };
         }
       }
 
