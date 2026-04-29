@@ -26,6 +26,10 @@ async function startServer() {
   app.use(express.json());
 
   // API to send a test notification or trigger by Firestore (conceptually)
+  app.get('/api/notifications/config', (req, res) => {
+    res.json({ publicKey: process.env.VITE_VAPID_PUBLIC_KEY || '' });
+  });
+
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;
     try {

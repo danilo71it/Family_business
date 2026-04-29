@@ -51,9 +51,19 @@ export function PushNotificationManager({ userId }: Props) {
     try {
       const registration = await navigator.serviceWorker.ready;
       
-      const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      let publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      
+      // Fallback: fetch from server if env is empty (can happen in dev with custom server)
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
-        throw new Error('Chiave VAPID pubblica non configurata nei Secrets.');
+        const res = await fetch('/api/notifications/config');
+        if (res.ok) {
+          const data = await res.json();
+          publicKey = data.publicKey;
+        }
+      }
+
+      if (!publicKey) {
+        throw new Error('Chiave VAPID pubblica non trovata. Controlla i Secrets (VITE_VAPID_PUBLIC_KEY).');
       }
 
       const subscription = await registration.pushManager.subscribe({
@@ -137,9 +147,9 @@ export function PushNotificationManager({ userId }: Props) {
             </span>
             <button 
               onClick={sendTest}
-              className="px-4 py-2 bg-white border-2 border-indigo-200 text-indigo-600 text-[10px] font-black uppercase rounded-xl shadow-sm hover:bg-indigo-50 hover:border-indigo-400 transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 py-3 bg-indigo-600 text-white text-xs font-black uppercase rounded-2xl shadow-lg hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2"
             >
-              Invia Test Ora
+              🚀 Invia Test Notifica
             </button>
           </div>
         </div>
