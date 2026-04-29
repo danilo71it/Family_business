@@ -28,6 +28,25 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // --- TOP PRIORITY ROUTES ---
+  // We use multiple names to be sure one hits
+  const handleConfigCheck = (req: express.Request, res: express.Response) => {
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Content-Type', 'application/json');
+    res.json({ 
+      publicKey: pub,
+      nodeEnv: process.env.NODE_ENV,
+      availableKeys: Object.keys(process.env).filter(k => k.includes('VAPID')),
+      status: 'ok'
+    });
+  };
+
+  app.get('/debug-push-keys', handleConfigCheck);
+  app.get('/api/v1/config', handleConfigCheck);
+  app.get('/config-check', handleConfigCheck);
+  // --- END TOP PRIORITY ---
+
   app.use(cors());
   app.use(express.json());
 
@@ -39,20 +58,6 @@ async function startServer() {
     next();
   });
 
-  // 2. DIAGNOSTIC ROUTES
-  const handleConfigCheck = (req: express.Request, res: express.Response) => {
-    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.json({ 
-      publicKey: pub,
-      hasViteKey: !!process.env.VITE_VAPID_PUBLIC_KEY,
-      nodeEnv: process.env.NODE_ENV,
-      availableKeys: Object.keys(process.env).filter(k => k.includes('VAPID'))
-    });
-  };
-
-  app.get('/api/push-config', handleConfigCheck);
-  app.get('/config-check', handleConfigCheck);
   app.get('/health', (req, res) => res.send('OK'));
   
   app.post('/api/notifications/send', async (req, res) => {

@@ -61,22 +61,29 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined') {
         try {
-          // Try multiple endpoints
-          const endpoints = ['/api/push-config', '/config-check'];
+          // Try multiple endpoints with absolute paths to bypass any relative routing issues
+          const endpoints = ['/debug-push-keys', '/api/v1/config', '/config-check'];
+          const baseUrl = window.location.origin;
+          
           for (const ep of endpoints) {
-            console.log(`Checking config at ${ep}...`);
-            const res = await fetch(`${ep}?t=${Date.now()}`);
-            if (res.ok) {
-              const result = await res.json();
-              console.log(`Config from ${ep}:`, result);
-              if (result.publicKey) {
-                publicKey = result.publicKey;
-                data = result;
-                break;
+            const url = `${baseUrl}${ep}?t=${Date.now()}`;
+            console.log(`Checking config at ${url}...`);
+            try {
+              const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+              if (res.ok) {
+                const result = await res.json();
+                console.log(`Config from ${ep}:`, result);
+                if (result.publicKey) {
+                  publicKey = result.publicKey;
+                  data = result;
+                  break;
+                }
+              } else {
+                console.warn(`Endpoint ${ep} returned ${res.status}`);
+                data = { fetchError: `Status ${res.status} for ${ep}` };
               }
-            } else {
-              console.warn(`Endpoint ${ep} returned ${res.status}`);
-              data = { fetchError: `Server status ${res.status} for ${ep}` };
+            } catch (innerErr) {
+              console.warn(`Failed to fetch from ${ep}:`, innerErr);
             }
           }
         } catch (fetchErr: any) {
