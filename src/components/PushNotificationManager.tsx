@@ -50,49 +50,56 @@ export function PushNotificationManager({ userId }: Props) {
     if (!userId) return;
     setIsSubscribing(true);
     try {
-      // Timeout promise for SW ready
+      // Timeout promise for SW ready - increased to 30 seconds
       const swReadyPromise = navigator.serviceWorker.ready;
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Timeout: il Service Worker non risponde. Prova a ricaricare la pagina.")), 10000)
+        setTimeout(() => reject(new Error("Timeout: il Service Worker non risponde. Prova a svuotare la cache del browser e ricaricare.")), 30000)
       );
 
       console.log('Waiting for Service Worker...');
       const registration = await Promise.race([swReadyPromise, timeoutPromise]) as ServiceWorkerRegistration;
       
       let publicKey = (import.meta as any).env.VITE_VAPID_PUBLIC_KEY;
-      let data: any = null;
-      
-      console.log('--- PUSH DIAGNOSTIC ---');
-      console.log('Build-time VAPID key:', publicKey);
       
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined' || publicKey.length < 20) {
         try {
-          const endpoints = ['/api/v1/vapid-public-key', '/keys'];
-          for (const endpoint of endpoints) {
-            console.log(`Fetching from ${endpoint}...`);
+          // Use window.location.origin to ensure absolute URLs
+          const origin = window.location.origin;
+          const endpoints = [
+            `${origin}/api/v1/vapid-public-key`,
+            `${origin}/keys`,
+            `${origin}/config-check`
+          ];
+          
+          for (const url of endpoints) {
+            console.log(`Fetching from ${url}...`);
             try {
-              const res = await fetch(endpoint + '?t=' + Date.now());
+              const res = await fetch(url + '?t=' + Date.now(), {
+                credentials: 'omit', // Avoid CORS/cookie issues on some mobile browsers
+                headers: { 'Accept': 'application/json' }
+              });
               if (res.ok) {
                 const result = await res.json();
+                console.log(`Result from ${url}:`, result);
                 if (result.publicKey && result.publicKey.length > 20) {
                   publicKey = result.publicKey;
-                  console.log(`Success from ${endpoint}`);
                   break;
                 }
+              } else {
+                console.warn(`${url} returned status ${res.status}`);
               }
-            } catch (e) {
-              console.warn(`Failed endpoint ${endpoint}:`, e);
+            } catch (e: any) {
+              console.warn(`Failed fetch ${url}:`, e.message);
             }
           }
         } catch (fetchErr: any) {
           console.error('Fetch exception:', fetchErr);
-          data = { error: fetchErr.message };
         }
       }
 
       if (!publicKey || publicKey === 'undefined' || publicKey.length < 20) {
-        throw new Error("Chiave VAPID non valida o non trovata nel server.");
+        throw new Error("Chiave VAPID non valida. Il server potrebbe non avere i Secrets configurati correttamente. Controlla di aver salvato VITE_VAPID_PUBLIC_KEY.");
       }
 
       console.log('Using VAPID key for subscription:', publicKey);

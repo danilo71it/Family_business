@@ -9,6 +9,11 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(registration => {
         console.log('SW registered: ', registration);
+        // Forziamo l'aggiornamento se c'è un worker in attesa
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        registration.update();
       })
       .catch(registrationError => {
         console.log('SW registration failed: ', registrationError);

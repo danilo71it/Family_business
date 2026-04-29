@@ -29,19 +29,22 @@ async function startServer() {
   const PORT = 3000;
 
   // 1. ROTTE CRITICHE - Prima di ogni altra cosa
-  app.get('/api/v1/vapid-public-key', (req, res) => {
+  console.log('[PUSH_INIT] Checking environment keys...');
+  console.log(`[PUSH_INIT] VITE_VAPID_PUBLIC_KEY exists: ${!!process.env.VITE_VAPID_PUBLIC_KEY}`);
+  console.log(`[PUSH_INIT] VAPID_PRIVATE_KEY exists: ${!!process.env.VAPID_PRIVATE_KEY}`);
+
+  const vapidHandler = (req: express.Request, res: express.Response) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID_SERVE] Request from ${req.ip}. Key found: ${!!pub}`);
+    console.log(`[VAPID_SERVE] Request from ${req.ip} (${req.get('user-agent')})`);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.json({ publicKey: pub, status: 'ok' });
-  });
+    res.status(200).json({ publicKey: pub, status: 'ok' });
+  };
 
-  app.get('/keys', (req, res) => {
-    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    res.set('Content-Type', 'application/json');
-    res.send({ publicKey: pub });
-  });
+  app.get('/api/v1/vapid-public-key', vapidHandler);
+  app.get('/keys', vapidHandler);
+  app.get('/config-check', vapidHandler);
 
   app.get('/health', (req, res) => res.send('OK'));
 

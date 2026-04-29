@@ -12,6 +12,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Listener per notifiche PUSH reali dal server
 self.addEventListener('push', (event) => {
   let data = { title: 'Notifica', body: 'Hai un nuovo promemoria' };
