@@ -21,6 +21,7 @@ export function NotificationService({ transactions, onUpdateTransaction }: Props
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [activeAlerts, setActiveAlerts] = useState<ActiveAlert[]>([]);
   const [mounted, setMounted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const swRegistration = useRef<ServiceWorkerRegistration | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
 
