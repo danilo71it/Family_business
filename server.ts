@@ -35,14 +35,15 @@ async function startServer() {
 
   const vapidHandler = (req: express.Request, res: express.Response) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    console.log(`[VAPID_SERVE] Request from ${req.ip} (${req.get('user-agent')})`);
+    console.log(`[VAPID_SERVE] Request: ${req.url} - Agent: ${req.get('user-agent')}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.status(200).json({ publicKey: pub, status: 'ok' });
+    res.send(JSON.stringify({ publicKey: pub, status: 'ok' }));
   };
 
   app.get('/api/v1/vapid-public-key', vapidHandler);
+  app.get('/get-vapid-key', vapidHandler);
   app.get('/keys', vapidHandler);
   app.get('/config-check', vapidHandler);
 
@@ -53,8 +54,8 @@ async function startServer() {
   app.use(express.json());
 
   app.use((req, res, next) => {
-    if (req.url.includes('api') || req.url.includes('key')) {
-      console.log(`[DEBUG] ${req.method} ${req.url}`);
+    if (req.url.includes('api') || req.url.includes('key') || req.url.includes('sw.js')) {
+      console.log(`[HTTP LOG] ${req.method} ${req.url}`);
     }
     next();
   });

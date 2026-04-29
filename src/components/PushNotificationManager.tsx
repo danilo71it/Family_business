@@ -50,56 +50,64 @@ export function PushNotificationManager({ userId }: Props) {
     if (!userId) return;
     setIsSubscribing(true);
     try {
-      // Timeout promise for SW ready - increased to 30 seconds
-      const swReadyPromise = navigator.serviceWorker.ready;
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Timeout: il Service Worker non risponde. Prova a svuotare la cache del browser e ricaricare.")), 30000)
-      );
+      console.log('Push initiation...');
+      
+      // Controllo SW
+      if (!('serviceWorker' in navigator)) {
+        throw new Error("Il tuo browser non supporta i Service Worker.");
+      }
 
-      console.log('Waiting for Service Worker...');
-      const registration = await Promise.race([swReadyPromise, timeoutPromise]) as ServiceWorkerRegistration;
+      let registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        console.log('No SW registration found, registering now...');
+        registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      }
+
+      // Attendiamo che sia attivo con un timeout personalizzato
+      const checkActive = async (reg: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> => {
+        if (reg.active) return reg;
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("Timeout attivazione Service Worker. Ricarica la pagina.")), 15000);
+          const interval = setInterval(() => {
+            if (reg.active) {
+              clearInterval(interval);
+              clearTimeout(timeout);
+              resolve(reg);
+            }
+          }, 500);
+        });
+      };
+
+      registration = await checkActive(registration);
+      console.log('Service Worker is active and ready.');
       
-      let publicKey = (import.meta as any).env.VITE_VAPID_PUBLIC_KEY;
+      let publicKey = '';
+      const origin = window.location.origin;
+      const endpoints = [
+        `${origin}/api/v1/vapid-public-key`,
+        `${origin}/get-vapid-key`,
+        `${origin}/keys`
+      ];
       
-      // Fallback: fetch from server if env is empty
-      if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined' || publicKey.length < 20) {
+      console.log('Fetching VAPID key...');
+      for (const url of endpoints) {
         try {
-          // Use window.location.origin to ensure absolute URLs
-          const origin = window.location.origin;
-          const endpoints = [
-            `${origin}/api/v1/vapid-public-key`,
-            `${origin}/keys`,
-            `${origin}/config-check`
-          ];
-          
-          for (const url of endpoints) {
-            console.log(`Fetching from ${url}...`);
-            try {
-              const res = await fetch(url + '?t=' + Date.now(), {
-                credentials: 'omit', // Avoid CORS/cookie issues on some mobile browsers
-                headers: { 'Accept': 'application/json' }
-              });
-              if (res.ok) {
-                const result = await res.json();
-                console.log(`Result from ${url}:`, result);
-                if (result.publicKey && result.publicKey.length > 20) {
-                  publicKey = result.publicKey;
-                  break;
-                }
-              } else {
-                console.warn(`${url} returned status ${res.status}`);
-              }
-            } catch (e: any) {
-              console.warn(`Failed fetch ${url}:`, e.message);
+          const res = await fetch(url + '?t=' + Date.now());
+          if (res.ok) {
+            const result = await res.json();
+            if (result.publicKey && result.publicKey.length > 20) {
+              publicKey = result.publicKey;
+              console.log(`Key obtained from ${url}`);
+              break;
             }
           }
-        } catch (fetchErr: any) {
-          console.error('Fetch exception:', fetchErr);
+        } catch (e: any) {
+          console.warn(`Fetch ${url} failed:`, e.message);
         }
       }
 
-      if (!publicKey || publicKey === 'undefined' || publicKey.length < 20) {
-        throw new Error("Chiave VAPID non valida. Il server potrebbe non avere i Secrets configurati correttamente. Controlla di aver salvato VITE_VAPID_PUBLIC_KEY.");
+      if (!publicKey) {
+        throw new Error("Impossibile recuperare la chiave di sicurezza dal server. Controlla la connessione o ricarica la pagina.");
       }
 
       console.log('Using VAPID key for subscription:', publicKey);

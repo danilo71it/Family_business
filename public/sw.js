@@ -6,9 +6,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
-    }).then(() => self.clients.claim())
+    Promise.all([
+      caches.keys().then((keys) => {
+        return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+      }),
+      self.clients.claim()
+    ])
   );
 });
 
