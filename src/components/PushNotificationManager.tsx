@@ -50,7 +50,14 @@ export function PushNotificationManager({ userId }: Props) {
     if (!userId) return;
     setIsSubscribing(true);
     try {
-      const registration = await navigator.serviceWorker.ready;
+      // Timeout promise for SW ready
+      const swReadyPromise = navigator.serviceWorker.ready;
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout: il Service Worker non risponde. Prova a ricaricare la pagina.")), 10000)
+      );
+
+      console.log('Waiting for Service Worker...');
+      const registration = await Promise.race([swReadyPromise, timeoutPromise]) as ServiceWorkerRegistration;
       
       let publicKey = (import.meta as any).env.VITE_VAPID_PUBLIC_KEY;
       let data: any = null;
@@ -61,20 +68,22 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined' || publicKey.length < 20) {
         try {
-          console.log('Fetching keys from server at /api/v1/vapid-public-key...');
-          const res = await fetch('/api/v1/vapid-public-key?t=' + Date.now());
-          
-          if (res.ok) {
-            const result = await res.json();
-            console.log('Key received from server:', !!result.publicKey);
-            if (result.publicKey) {
-              publicKey = result.publicKey;
-            } else {
-              data = { error: 'Empty publicKey in server response' };
+          const endpoints = ['/api/v1/vapid-public-key', '/keys'];
+          for (const endpoint of endpoints) {
+            console.log(`Fetching from ${endpoint}...`);
+            try {
+              const res = await fetch(endpoint + '?t=' + Date.now());
+              if (res.ok) {
+                const result = await res.json();
+                if (result.publicKey && result.publicKey.length > 20) {
+                  publicKey = result.publicKey;
+                  console.log(`Success from ${endpoint}`);
+                  break;
+                }
+              }
+            } catch (e) {
+              console.warn(`Failed endpoint ${endpoint}:`, e);
             }
-          } else {
-            console.error('Server error status:', res.status);
-            data = { error: `HTTP ${res.status}` };
           }
         } catch (fetchErr: any) {
           console.error('Fetch exception:', fetchErr);
@@ -83,8 +92,7 @@ export function PushNotificationManager({ userId }: Props) {
       }
 
       if (!publicKey || publicKey === 'undefined' || publicKey.length < 20) {
-        const diag = data?.error ? ` [DIAG: ${data.error}]` : '';
-        throw new Error(`Chiave VAPID non trovata.${diag} Per favore ricarica la pagina con CTRL+F5.`);
+        throw new Error("Chiave VAPID non valida o non trovata nel server.");
       }
 
       console.log('Using VAPID key for subscription:', publicKey);

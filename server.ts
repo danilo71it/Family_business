@@ -37,6 +37,12 @@ async function startServer() {
     res.json({ publicKey: pub, status: 'ok' });
   });
 
+  app.get('/keys', (req, res) => {
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    res.set('Content-Type', 'application/json');
+    res.send({ publicKey: pub });
+  });
+
   app.get('/health', (req, res) => res.send('OK'));
 
   // 2. Middleware generali
