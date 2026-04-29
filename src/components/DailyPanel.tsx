@@ -90,23 +90,15 @@ export function DailyPanel({
               <Clock size={16} />
               <h3 className="text-[10px] font-bold uppercase tracking-[0.2em]">Turno di Lavoro</h3>
             </div>
-            <div className="flex flex-nowrap overflow-x-auto px-1 py-4 -my-4 pb-2 gap-3 scrollbar-hide">
-              <div className="flex flex-nowrap gap-3 pr-4"> {/* Added extra padding wrapper */}
-                <button 
-                  onClick={() => onSaveShiftOverride({ date, shiftId: null })}
-                  className={`aspect-square h-11 shrink-0 rounded-2xl border-2 flex items-center justify-center text-[10px] font-black transition-all ${
-                    !currentShift ? 'border-red-500 bg-red-50 text-red-600 ring-4 ring-red-50' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'
-                  }`}
-                >
-                  RIPOSO
-                </button>
+            <div className="flex flex-nowrap overflow-x-auto px-1 py-4 -my-4 pb-2 gap-[5px] scrollbar-hide">
+              <div className="flex flex-nowrap gap-[5px] pr-6 py-1">
                 {shifts.map(s => {
                   const isSelected = currentShift?.id === s.id;
                   return (
                     <button 
                       key={s.id}
                       onClick={() => onSaveShiftOverride({ date, shiftId: s.id })}
-                      className={`aspect-square h-11 shrink-0 rounded-2xl border-2 flex items-center justify-center text-xs font-black transition-all ${
+                      className={`aspect-square h-[34px] shrink-0 rounded-xl border-2 flex items-center justify-center text-[10px] font-black transition-all ${
                         isSelected ? 'ring-4 ring-offset-2 z-10' : 'border-transparent opacity-80 hover:opacity-100'
                       }`}
                       style={{ 
@@ -145,7 +137,7 @@ export function DailyPanel({
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleEdit(m)} className="p-2 hover:bg-gray-50 rounded-lg text-blue-500"><Pencil size={16} /></button>
                         <button onClick={() => onDeleteTransaction(m.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-500"><Trash2 size={16} /></button>
                       </div>
@@ -181,7 +173,7 @@ export function DailyPanel({
                             {a.description && <p className="text-sm text-gray-500 mt-1">{a.description}</p>}
                           </div>
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <button onClick={() => handleEdit(a)} className="p-2 hover:bg-gray-50 rounded-lg text-blue-500"><Pencil size={16} /></button>
                           <button onClick={() => onDeleteTransaction(a.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-500"><Trash2 size={16} /></button>
                         </div>
@@ -226,7 +218,7 @@ export function DailyPanel({
                         <StickyNote size={16} className="text-amber-500 mt-1 shrink-0" />
                         <p className="text-sm whitespace-pre-wrap">{n.note}</p>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
+                      <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
                         <button onClick={() => handleEdit(n)} className="p-2 hover:bg-white/50 rounded-lg text-blue-500"><Pencil size={16} /></button>
                         <button onClick={() => onDeleteTransaction(n.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-500"><Trash2 size={16} /></button>
                       </div>
@@ -268,7 +260,7 @@ export function DailyPanel({
                     <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
                       <StickyNote size={24} />
                     </div>
-                    <span className="text-sm font-bold text-gray-900">Nota Libre</span>
+                    <span className="text-sm font-bold text-gray-900">Nota</span>
                   </button>
                 </div>
               </div>
@@ -335,11 +327,34 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
   const [category, setCategory] = useState(initialData?.category || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [address, setAddress] = useState(initialData?.address || '');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [time, setTime] = useState(initialData?.time || '');
   const [reminders, setReminders] = useState<Reminder[]>(initialData?.reminders || []);
   const [newReminderValue, setNewReminderValue] = useState('15');
   const [newReminderUnit, setNewReminderUnit] = useState<'minutes' | 'hours' | 'days'>('minutes');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Address lookup debounced
+  useEffect(() => {
+    if (address.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&addressdetails=1&limit=5&countrycodes=it`);
+        const data = await response.json();
+        setSuggestions(data);
+        setShowSuggestions(true);
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [address]);
 
   const addReminder = () => {
     const val = parseInt(newReminderValue);
@@ -401,7 +416,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
           />
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1 relative">
           <label className="text-[10px] font-bold text-gray-400 pl-1 uppercase">Indirizzo (Google Maps)</label>
           <div className="relative">
             <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -409,10 +424,29 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
               type="text" 
               value={address} 
               onChange={e => setAddress(e.target.value)}
+              onFocus={() => address.length >= 3 && setShowSuggestions(true)}
               placeholder="Via, Piazza, Città..."
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-medium"
             />
           </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              {suggestions.map((s, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setAddress(s.display_name);
+                    setShowSuggestions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-indigo-50 transition-colors text-sm border-b border-gray-50 last:border-none flex items-start gap-3"
+                >
+                  <MapPin size={14} className="text-indigo-400 mt-1 shrink-0" />
+                  <span className="line-clamp-2">{s.display_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 pt-2">
