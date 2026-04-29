@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff, StickyNote, Clock } from 'lucide-react';
-import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
+import { Transaction, TransactionType, RecurrenceFrequency, Reminder } from '../types';
 import { format } from 'date-fns';
 
 interface Props {

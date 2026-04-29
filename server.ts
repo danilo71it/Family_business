@@ -29,22 +29,27 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
-
-  // GLOBAL DIAGNOSTIC ROUTE - Moved to the very top
-  app.get('/config-check', (req, res) => {
-    console.log('[DEBUG] /config-check hit');
-    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    res.json({ publicKey: pub, envKeys: Object.keys(process.env).filter(k => k.includes('VAPID')) });
-  });
-
-  // Simple logger to see what requests hit the server
+  // 1. PRIMARY LOGGER - MUST BE FIRST
   app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
   });
 
-  app.get('/health', (req, res) => res.send('OK'));
+  app.use(express.json());
+
+  // 2. DIAGNOSTIC ROUTES - Using /api prefix which is more standard
+  app.get('/api/debug-vars', (req, res) => {
+    console.log('[DEBUG] /api/debug-vars hit');
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    res.json({ 
+      publicKey: pub,
+      hasViteKey: !!process.env.VITE_VAPID_PUBLIC_KEY,
+      nodeEnv: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.get('/health', (req, res) => res.send('OK - Server is active'));
   
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;

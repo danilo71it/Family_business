@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { db } from '../lib/firebase';
@@ -60,22 +61,14 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
         try {
-          const res = await fetch(`/config-check?t=${Date.now()}`);
+          const res = await fetch(`/api/debug-vars?t=${Date.now()}`);
           if (res.ok) {
             data = await res.json();
             console.log('Config from server:', data);
             publicKey = data.publicKey;
-            
-            if (!publicKey && data.envKeys) {
-              console.warn('Server VAPID keys detected:', data.envKeys);
-              const foundKey = data.envKeys.find((k: string) => k.toUpperCase().includes('VAPID') && k.toUpperCase().includes('PUBLIC'));
-              if (foundKey && foundKey !== 'VITE_VAPID_PUBLIC_KEY') {
-                throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
-              }
-            }
           } else {
             console.error('Server returned error status:', res.status);
-            data = { fetchError: `Server status ${res.status} for /config-check` };
+            data = { fetchError: `Server status ${res.status} for /api/debug-vars` };
           }
         } catch (fetchErr: any) {
           console.error('Failed to fetch config from server:', fetchErr);
