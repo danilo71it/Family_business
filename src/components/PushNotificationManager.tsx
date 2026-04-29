@@ -60,22 +60,22 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
         try {
-          const res = await fetch('/api/notifications/config');
+          const res = await fetch(`/api/config?t=${Date.now()}`);
           if (res.ok) {
             data = await res.json();
             console.log('Config from server:', data);
             publicKey = data.publicKey;
             
-            if (!publicKey && data.availableKeys) {
-              console.warn('Server VAPID keys detected:', data.availableKeys);
-              const foundKey = data.availableKeys.find((k: string) => k.toUpperCase().includes('VAPID') && k.toUpperCase().includes('PUBLIC'));
-              if (foundKey && foundKey !== 'VITE_VAPID_PUBLIC_KEY') {
-                throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
+            if (!publicKey && data.debugInfo) {
+              console.warn('Server VAPID keys detected:', data.debugInfo);
+              const foundKey = data.debugInfo.find((k: any) => k.name.toUpperCase().includes('VAPID') && k.name.toUpperCase().includes('PUBLIC'));
+              if (foundKey && foundKey.name !== 'VITE_VAPID_PUBLIC_KEY') {
+                throw new Error(`Hai inserito la chiave con nome '${foundKey.name}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
               }
             }
           } else {
             console.error('Server returned error status:', res.status);
-            data = { fetchError: `Server status ${res.status}` };
+            data = { fetchError: `Server status ${res.status} for /api/config` };
           }
         } catch (fetchErr: any) {
           console.error('Failed to fetch config from server:', fetchErr);
@@ -84,16 +84,8 @@ export function PushNotificationManager({ userId }: Props) {
       }
 
       if (!publicKey) {
-        let diagnosticInfo = '';
-        if (data && data.debugInfo) {
-          const keysFound = data.debugInfo.map((k: any) => k.name).join(', ');
-          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID o VITE trovata nei Secrets)';
-        } else if (data && data.fetchError) {
-          diagnosticInfo = ` (Errore caricamento: ${data.fetchError})`;
-        } else {
-          diagnosticInfo = ' (Impossibile contattare il server)';
-        }
-        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto e di aver cliccato 'Save'.`);
+        let diagnosticInfo = (data && data.fetchError) ? ` (Errore: ${data.fetchError})` : ' (Chiave non trovata nei Secrets)';
+        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' e di aver cliccato 'Save'.`);
       }
 
       console.log('Using VAPID key for subscription:', publicKey);

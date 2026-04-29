@@ -31,29 +31,19 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API to send a test notification or trigger by Firestore (conceptually)
-  app.get('/api/notifications/config', (req, res) => {
-    // Check if VAPID keys are present in any case or prefix
-    const allKeys = Object.keys(process.env);
-    
-    // Specifically check for our keys
-    const publicKey = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    
-    // Find all keys that might be relevant for debugging
-    const debugKeys = allKeys.filter(k => 
-      k.toUpperCase().includes('VAPID') || 
-      k.toUpperCase().includes('PUBLIC') || 
-      k.toUpperCase().includes('PRIVATE')
-    ).map(k => ({ name: k, length: process.env[k]?.length }));
+  // Simple logger to see what requests hit the server
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
 
-    console.log('--- SERVER ENVIRONMENT DIAGNOSTIC ---');
-    console.log('PublicKey present:', !!publicKey);
-    console.log('Debug Keys:', debugKeys);
-    
-    res.json({ 
-      publicKey: publicKey,
-      debugInfo: debugKeys
-    });
+  // Basic diagnostic routes
+  app.get('/health', (req, res) => res.send('OK'));
+  
+  app.get('/api/config', (req, res) => {
+    console.log('[API] /api/config request received');
+    const publicKey = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    res.json({ publicKey });
   });
 
   app.post('/api/notifications/send', async (req, res) => {
