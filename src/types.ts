@@ -44,6 +44,7 @@ export interface Transaction {
   address?: string;
   time?: string; // HH:mm
   reminders?: Reminder[];
+  googleEventId?: string; 
 }
 
 export interface FamilyGroup {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth, db, googleProvider } from '../lib/firebase';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, User, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { UserProfile } from '../types';
 
@@ -13,6 +13,8 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        // Clear token if user changed or session expired? 
+        // For simplicity we trust onAuthStateChanged.
         const userRef = doc(db, 'users', firebaseUser.uid);
         const userSnap = await getDoc(userRef);
 
@@ -33,6 +35,7 @@ export function useAuth() {
         }
       } else {
         setProfile(null);
+        localStorage.removeItem('google_access_token');
       }
       setLoading(false);
     });
@@ -42,7 +45,12 @@ export function useAuth() {
 
   const login = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
+      if (accessToken) {
+        localStorage.setItem('google_access_token', accessToken);
+      }
     } catch (error) {
       console.error('Error logging in:', error);
     }

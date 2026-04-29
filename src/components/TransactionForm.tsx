@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Calendar, FileText, Repeat, AlertCircle, Bell, Trash2, Eye, EyeOff, StickyNote, Clock } from 'lucide-react';
 import { Transaction, TransactionType, RecurrenceFrequency } from '../types';
 import { format } from 'date-fns';
-import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarUtils';
 
 interface Props {
   onAdd: (t: any) => Promise<void>;
@@ -496,28 +495,6 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           >
             {isSubmitting ? 'Salvataggio...' : (initialData ? 'Aggiorna' : (type === 'income' ? 'Salva Entrata' : 'Salva Uscita'))}
           </button>
-          
-          {initialData && (type === 'appointment' || type === 'note') && (
-             <div className="flex gap-2">
-                <a 
-                  href={getGoogleCalendarUrl(category || 'Appunto', new Date(date), time, note, address)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase text-center flex items-center justify-center gap-2 border border-indigo-100"
-                >
-                  <Calendar size={14} />
-                  Google Cal
-                </a>
-                <button 
-                  type="button"
-                  onClick={() => downloadIcsFile(category || 'Appunto', new Date(date), time, note, address)}
-                  className="flex-1 py-3 bg-gray-50 text-gray-600 rounded-xl text-[10px] font-black uppercase text-center flex items-center justify-center gap-2 border border-gray-100"
-                >
-                  <FileText size={14} />
-                  Apple/ICS
-                </button>
-             </div>
-          )}
         </div>
         
         {initialData && onDelete && (

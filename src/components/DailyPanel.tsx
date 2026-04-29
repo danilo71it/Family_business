@@ -8,7 +8,6 @@ import { format, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Transaction, WorkShift, ShiftCycle, ShiftOverride, TransactionType, Reminder } from '../types';
 import { getShiftForDay } from '../lib/shiftUtils';
-import { getGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { TransactionForm } from './TransactionForm';
 
@@ -181,22 +180,6 @@ export function DailyPanel({
                       </div>
                       
                       <div className="flex flex-wrap gap-2 mt-1 pl-11">
-                        <a 
-                          href={getGoogleCalendarUrl(a.category, a.date, a.time, a.description, a.address)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-2 py-1 bg-white text-indigo-600 rounded-lg text-[10px] font-bold border border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm"
-                        >
-                          <CalendarIcon size={12} />
-                          GOOGLE CALENDAR
-                        </a>
-                        <button 
-                          onClick={() => downloadIcsFile(a.category, a.date, a.time, a.description, a.address)}
-                          className="flex items-center gap-1.5 px-2 py-1 bg-white text-gray-600 rounded-lg text-[10px] font-bold border border-gray-100 hover:bg-gray-50 transition-all shadow-sm"
-                        >
-                          <ExternalLink size={12} />
-                          FILE .ICS
-                        </button>
                         {a.address && (
                           <a 
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.address)}`}

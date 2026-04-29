@@ -3,11 +3,12 @@ import { db } from '../lib/firebase';
 import { 
   collection, query, where, orderBy, onSnapshot, 
   addDoc, deleteDoc, doc, serverTimestamp, 
-  Timestamp, setDoc, writeBatch, getDocs, deleteField
+  Timestamp, setDoc, writeBatch, getDocs, deleteField, getDoc
 } from 'firebase/firestore';
 import { Transaction, FamilyGroup, TransactionType, RecurrenceFrequency } from '../types';
 import { handleFirestoreError } from '../lib/errorUtils';
 import { addDays, addWeeks, addMonths, addYears, startOfMonth, endOfMonth } from 'date-fns';
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../lib/googleCalendar';
 
 export function useFinance(groupId: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -124,6 +125,14 @@ export function useFinance(groupId: string | null) {
           data.parentTransactionId = parentId;
         }
 
+        // --- Google Calendar Sync ---
+        if (t.type === 'appointment') {
+          // Construct a temporary transaction for the formatter
+          const tempTx: any = { ...data, date: occurrenceDate };
+          const eventId = await createCalendarEvent(tempTx);
+          if (eventId) data.googleEventId = eventId;
+        }
+
         await addDoc(transactionsRef, data);
       }
     } catch (err) {
@@ -149,13 +158,21 @@ export function useFinance(groupId: string | null) {
     }
   };
 
-  const deleteTransaction = async (id: string) => {
+  const deleteTransaction = async (id: string | Transaction) => {
+    const txId = typeof id === 'string' ? id : id.id;
+    const txData = typeof id === 'string' ? transactions.find(t => t.id === id) : id;
+    
     const cleanGroupId = groupId?.trim();
     if (!cleanGroupId) return;
     try {
-      await deleteDoc(doc(db, 'groups', cleanGroupId, 'transactions', id));
+      // --- Google Calendar Sync ---
+      if (txData?.googleEventId) {
+        await deleteCalendarEvent(txData.googleEventId);
+      }
+      
+      await deleteDoc(doc(db, 'groups', cleanGroupId, 'transactions', txId));
     } catch (err) {
-      handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/${id}`);
+      handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/${txId}`);
     }
   };
 
@@ -166,8 +183,16 @@ export function useFinance(groupId: string | null) {
       const transactionsRef = collection(db, 'groups', cleanGroupId, 'transactions');
       const q = query(transactionsRef, where('parentTransactionId', '==', parentTransactionId));
       const snapshot = await getDocs(q);
+      
       const batch = writeBatch(db);
-      snapshot.docs.forEach(d => batch.delete(d.ref));
+      for (const d of snapshot.docs) {
+        const data = d.data() as Transaction;
+        // --- Google Calendar Sync ---
+        if (data.googleEventId) {
+          await deleteCalendarEvent(data.googleEventId);
+        }
+        batch.delete(d.ref);
+      }
       await batch.commit();
     } catch (err) {
       handleFirestoreError(err, 'delete', `groups/${cleanGroupId}/transactions/series/${parentTransactionId}`);
@@ -179,11 +204,30 @@ export function useFinance(groupId: string | null) {
     if (!cleanGroupId) return;
     try {
       const docRef = doc(db, 'groups', cleanGroupId, 'transactions', id);
+      const currentTx = transactions.find(t => t.id === id);
+      
       const dataToSave: any = { ...updates, updatedAt: serverTimestamp() };
       
       // Handle date conversion if present
+      const targetDate = updates.date || currentTx?.date;
       if (updates.date) {
         dataToSave.date = Timestamp.fromDate(updates.date);
+      }
+
+      // --- Google Calendar Sync ---
+      const type = updates.type || currentTx?.type;
+      if (type === 'appointment') {
+        const mergedTx = { ...currentTx, ...updates, date: targetDate } as Transaction;
+        if (currentTx?.googleEventId) {
+          await updateCalendarEvent(currentTx.googleEventId, mergedTx);
+        } else {
+          const eventId = await createCalendarEvent(mergedTx);
+          if (eventId) dataToSave.googleEventId = eventId;
+        }
+      } else if (currentTx?.googleEventId) {
+          // If it's no longer an appointment but has an event ID, delete it
+          await deleteCalendarEvent(currentTx.googleEventId);
+          dataToSave.googleEventId = deleteField();
       }
 
       // Logic for shifting future recurring dates
