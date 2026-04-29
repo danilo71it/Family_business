@@ -10,13 +10,28 @@ interface Props {
 export function PushNotificationManager({ userId }: Props) {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-      setPermission(Notification.permission);
+    async function checkSubscription() {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        setIsSupported(true);
+        setPermission(Notification.permission);
+        
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.getSubscription();
+          setHasSubscription(!!subscription);
+          if (subscription) {
+            localStorage.setItem('push_subscription', JSON.stringify(subscription));
+          }
+        } catch (err) {
+          console.error('Error checking subscription:', err);
+        }
+      }
     }
+    checkSubscription();
   }, []);
 
   const urlBase64ToUint8Array = (base64String: string) => {
@@ -54,6 +69,7 @@ export function PushNotificationManager({ userId }: Props) {
       });
 
       setPermission('granted');
+      setHasSubscription(true);
       localStorage.setItem('push_subscription', JSON.stringify(subObj));
       console.log('Push subscription successful');
     } catch (error) {
@@ -98,21 +114,21 @@ export function PushNotificationManager({ userId }: Props) {
         <h3 className="text-sm font-bold text-indigo-900">Notifiche di Sistema</h3>
         <p className="text-[10px] text-indigo-600 font-medium">Ricevi avvisi anche ad app chiusa</p>
       </div>
-      {permission !== 'granted' && (
+      {(!hasSubscription) && (
         <button
           onClick={subscribe}
           disabled={isSubscribing}
-          className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-lg shadow-sm hover:bg-indigo-700 transition-all flex items-center gap-2"
+          className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-lg shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2 active:scale-95"
         >
-          {isSubscribing ? <Loader2 size={12} className="animate-spin" /> : 'Attiva'}
+          {isSubscribing ? <Loader2 size={12} className="animate-spin" /> : 'Attiva Notifiche'}
         </button>
       )}
-      {permission === 'granted' && (
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[10px] font-black text-green-600 uppercase">Attive</span>
+      {hasSubscription && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md border border-green-100">Attive</span>
           <button 
             onClick={sendTest}
-            className="text-[9px] font-bold text-indigo-400 hover:text-indigo-600 underline decoration-indigo-200"
+            className="px-3 py-2 bg-white border border-indigo-200 text-indigo-600 text-[10px] font-bold uppercase rounded-lg shadow-sm hover:bg-indigo-50 transition-all active:scale-95"
           >
             Invia Test
           </button>
