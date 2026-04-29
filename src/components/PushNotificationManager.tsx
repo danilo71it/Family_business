@@ -52,27 +52,41 @@ export function PushNotificationManager({ userId }: Props) {
       const registration = await navigator.serviceWorker.ready;
       
       let publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      let data: any = null;
       
-      // Fallback: fetch from server if env is empty (can happen in dev with custom server)
+      console.log('--- DEBUG CLIENT ---');
+      console.log('Initial VAPID key from env:', publicKey);
+      
+      // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY') {
-        const res = await fetch('/api/notifications/config');
-        if (res.ok) {
-          const data = await res.json();
-          publicKey = data.publicKey;
-          if (!publicKey && data.availableKeys) {
-            console.warn('Server VAPID keys:', data.availableKeys);
-            const foundKey = data.availableKeys.find((k: string) => k.toLowerCase().includes('public'));
-            if (foundKey) {
-              throw new Error(`Trovata chiave '${foundKey}' ma non 'VITE_VAPID_PUBLIC_KEY'. Rinominala nei Secrets.`);
+        try {
+          const res = await fetch('/api/notifications/config');
+          if (res.ok) {
+            data = await res.json();
+            console.log('Config from server:', data);
+            publicKey = data.publicKey;
+            
+            if (!publicKey && data.availableKeys) {
+              console.warn('Server VAPID keys detected:', data.availableKeys);
+              const foundKey = data.availableKeys.find((k: string) => k.toUpperCase().includes('VAPID') && k.toUpperCase().includes('PUBLIC'));
+              if (foundKey && foundKey !== 'VITE_VAPID_PUBLIC_KEY') {
+                throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
+              }
             }
           }
+        } catch (fetchErr) {
+          console.error('Failed to fetch config from server:', fetchErr);
         }
       }
 
       if (!publicKey) {
-        const diagnosticInfo = data?.availableKeys ? ` (Chiavi trovate sul server: ${data.availableKeys.join(', ')})` : ' (Nessuna chiave VAPID trovata sul server)';
-        throw new Error(`Chiave VAPID pubblica non trovata.${diagnosticInfo}. Assicurati di aver salvato i Secrets e prova a ricaricare la pagina.`);
+        const diagnosticInfo = data?.availableKeys 
+          ? ` (Chiavi trovate: ${data.availableKeys.join(', ')})` 
+          : ' (Nessuna chiave trovata nei Secrets)';
+        throw new Error(`VAPID Public Key non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto.`);
       }
+
+      console.log('Using VAPID key for subscription:', publicKey);
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
