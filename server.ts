@@ -11,6 +11,12 @@ const vapidKeys = {
   privateKey: process.env.VAPID_PRIVATE_KEY || ''
 };
 
+console.log('--- STARTUP VAPID CHECK ---');
+console.log('VITE_VAPID_PUBLIC_KEY length:', vapidKeys.publicKey.length);
+console.log('VAPID_PRIVATE_KEY length:', vapidKeys.privateKey.length);
+console.log('Available env keys:', Object.keys(process.env).filter(k => k.includes('VAPID') || k.includes('VITE')));
+console.log('---------------------------');
+
 if (vapidKeys.publicKey && vapidKeys.privateKey) {
   webpush.setVapidDetails(
     'mailto:danilo.sbergia@gmail.com',

@@ -73,9 +73,13 @@ export function PushNotificationManager({ userId }: Props) {
                 throw new Error(`Hai inserito la chiave con nome '${foundKey}' ma il sistema cerca 'VITE_VAPID_PUBLIC_KEY'. Per favore rinominala nei Secrets.`);
               }
             }
+          } else {
+            console.error('Server returned error status:', res.status);
+            data = { fetchError: `Server status ${res.status}` };
           }
-        } catch (fetchErr) {
+        } catch (fetchErr: any) {
           console.error('Failed to fetch config from server:', fetchErr);
+          data = { fetchError: fetchErr.message || 'Network error' };
         }
       }
 
@@ -84,10 +88,12 @@ export function PushNotificationManager({ userId }: Props) {
         if (data && data.debugInfo) {
           const keysFound = data.debugInfo.map((k: any) => k.name).join(', ');
           diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID o VITE trovata nei Secrets)';
+        } else if (data && data.fetchError) {
+          diagnosticInfo = ` (Errore caricamento: ${data.fetchError})`;
         } else {
-          diagnosticInfo = ' (Impossibile comunicare con il server per la diagnostica)';
+          diagnosticInfo = ' (Impossibile contattare il server)';
         }
-        throw new Error(`VAPID Public Key non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto.`);
+        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' con il valore corretto e di aver cliccato 'Save'.`);
       }
 
       console.log('Using VAPID key for subscription:', publicKey);
