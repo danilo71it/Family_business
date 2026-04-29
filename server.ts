@@ -31,21 +31,21 @@ async function startServer() {
 
   app.use(express.json());
 
+  // GLOBAL DIAGNOSTIC ROUTE - Moved to the very top
+  app.get('/config-check', (req, res) => {
+    console.log('[DEBUG] /config-check hit');
+    const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+    res.json({ publicKey: pub, envKeys: Object.keys(process.env).filter(k => k.includes('VAPID')) });
+  });
+
   // Simple logger to see what requests hit the server
   app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
   });
 
-  // Basic diagnostic routes
   app.get('/health', (req, res) => res.send('OK'));
   
-  app.get('/api/config', (req, res) => {
-    console.log('[API] /api/config request received');
-    const publicKey = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    res.json({ publicKey });
-  });
-
   app.post('/api/notifications/send', async (req, res) => {
     const { subscription, payload } = req.body;
     try {
