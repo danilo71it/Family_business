@@ -61,48 +61,20 @@ export function PushNotificationManager({ userId }: Props) {
       // Fallback: fetch from server if env is empty
       if (!publicKey || publicKey === 'YOUR_PUBLIC_VAPID_KEY' || publicKey === 'undefined') {
         try {
-          // Try multiple endpoints with absolute paths to bypass any relative routing issues
-          const endpoints = ['/debug-push-keys', '/api/v1/config', '/config-check'];
-          const baseUrl = window.location.origin;
-          
-          for (const ep of endpoints) {
-            const url = `${baseUrl}${ep}?t=${Date.now()}`;
-            console.log(`Checking config at ${url}...`);
-            try {
-              const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-              if (res.ok) {
-                const result = await res.json();
-                console.log(`Config from ${ep}:`, result);
-                if (result.publicKey) {
-                  publicKey = result.publicKey;
-                  data = result;
-                  break;
-                }
-              } else {
-                console.warn(`Endpoint ${ep} returned ${res.status}`);
-                data = { fetchError: `Status ${res.status} for ${ep}` };
-              }
-            } catch (innerErr) {
-              console.warn(`Failed to fetch from ${ep}:`, innerErr);
-            }
+          console.log('Fetching keys from server...');
+          const res = await fetch('/api/va-keys?t=' + Date.now());
+          if (res.ok) {
+            const result = await res.json();
+            console.log('Key received from server:', !!result.publicKey);
+            publicKey = result.publicKey;
           }
         } catch (fetchErr: any) {
-          console.error('Failed to fetch config from server:', fetchErr);
-          data = { fetchError: fetchErr.message || 'Network error' };
+          console.error('Fetch error:', fetchErr);
         }
       }
 
       if (!publicKey || publicKey === 'undefined') {
-        let diagnosticInfo = '';
-        if (data && data.availableKeys) {
-          const keysFound = data.availableKeys.join(', ');
-          diagnosticInfo = keysFound ? ` (Chiavi rilevate: ${keysFound})` : ' (Nessuna chiave VAPID trovata nei Secrets)';
-        } else if (data && data.fetchError) {
-          diagnosticInfo = ` (${data.fetchError})`;
-        } else {
-          diagnosticInfo = ' (Impossibile contattare il server o chiave mancante)';
-        }
-        throw new Error(`Chiave VAPID non trovata.${diagnosticInfo}. Assicurati di aver creato un Secret chiamato 'VITE_VAPID_PUBLIC_KEY' e di aver cliccato 'Save'.`);
+        throw new Error("Chiave VAPID non trovata. Per favore ricarica la pagina con CTRL+F5 per forzare l'aggiornamento.");
       }
 
       console.log('Using VAPID key for subscription:', publicKey);

@@ -28,35 +28,30 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // --- TOP PRIORITY ROUTES ---
-  // We use multiple names to be sure one hits
-  const handleConfigCheck = (req: express.Request, res: express.Response) => {
+  // --- ROTTE DI CONFIGURAZIONE (MASSIMA PRIORITÀ) ---
+  app.get('/api/va-keys', (req, res) => {
     const pub = process.env.VITE_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.set('Content-Type', 'application/json');
-    res.json({ 
-      publicKey: pub,
-      nodeEnv: process.env.NODE_ENV,
-      availableKeys: Object.keys(process.env).filter(k => k.includes('VAPID')),
-      status: 'ok'
-    });
-  };
+    console.log(`[VAPID] Request for keys. Found: ${!!pub} (Len: ${pub.length})`);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json({ publicKey: pub, status: 'ok' });
+  });
 
-  app.get('/debug-push-keys', handleConfigCheck);
-  app.get('/api/v1/config', handleConfigCheck);
-  app.get('/config-check', handleConfigCheck);
-  // --- END TOP PRIORITY ---
+  app.get('/config-check', (req, res) => {
+    res.redirect('/api/va-keys');
+  });
 
   app.use(cors());
   app.use(express.json());
 
-  // 1. PRIMARY LOGGER
+  // Log di ogni richiesta per debugging reale
   app.use((req, res, next) => {
-    if (req.url !== '/health') {
-      console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
+    if (req.url.startsWith('/api') || req.url.includes('check')) {
+      console.log(`[DEBUG SERV] ${req.method} ${req.url}`);
     }
     next();
   });
+  // --- FINE ROTTE PRIORITÀ ---
 
   app.get('/health', (req, res) => res.send('OK'));
   
