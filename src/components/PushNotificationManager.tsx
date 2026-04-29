@@ -59,6 +59,13 @@ export function PushNotificationManager({ userId }: Props) {
         if (res.ok) {
           const data = await res.json();
           publicKey = data.publicKey;
+          if (!publicKey && data.availableKeys) {
+            console.warn('Server VAPID keys:', data.availableKeys);
+            const foundKey = data.availableKeys.find((k: string) => k.toLowerCase().includes('public'));
+            if (foundKey) {
+              throw new Error(`Trovata chiave '${foundKey}' ma non 'VITE_VAPID_PUBLIC_KEY'. Rinominala nei Secrets.`);
+            }
+          }
         }
       }
 

@@ -27,7 +27,12 @@ async function startServer() {
 
   // API to send a test notification or trigger by Firestore (conceptually)
   app.get('/api/notifications/config', (req, res) => {
-    res.json({ publicKey: process.env.VITE_VAPID_PUBLIC_KEY || '' });
+    const keys = Object.keys(process.env).filter(k => k.includes('VAPID'));
+    console.log('Available VAPID keys on server:', keys);
+    res.json({ 
+      publicKey: process.env.VITE_VAPID_PUBLIC_KEY || '',
+      availableKeys: keys
+    });
   });
 
   app.post('/api/notifications/send', async (req, res) => {
