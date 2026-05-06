@@ -390,37 +390,37 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-indigo-100 shadow-sm space-y-4">
-      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2 mb-2">
         <CalendarIcon size={16} /> 
         {initialData ? 'Modifica Appuntamento' : 'Nuovo Appuntamento'}
       </h3>
       
       <div className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-gray-400 pl-1 uppercase">Titolo</label>
+          <label className="text-xs font-bold uppercase tracking-wider pl-1 text-indigo-600">Titolo</label>
           <input 
             type="text" 
             value={category} 
             onChange={e => setCategory(e.target.value)}
             placeholder="Cosa devi fare?"
-            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-medium"
+            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
             required
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-gray-400 pl-1 uppercase">Descrizione</label>
+          <label className="text-xs font-bold uppercase tracking-wider pl-1 text-indigo-600">Descrizione</label>
           <textarea 
             value={description} 
             onChange={e => setDescription(e.target.value)}
             placeholder="Dettagli aggiuntivi..."
             rows={2}
-            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-medium resize-none"
+            className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium resize-none shadow-sm"
           />
         </div>
 
         <div className="space-y-1 relative">
-          <label className="text-[10px] font-bold text-gray-400 pl-1 uppercase">Indirizzo (Google Maps)</label>
+          <label className="text-xs font-bold uppercase tracking-wider pl-1 text-indigo-600">Indirizzo (Google Maps)</label>
           <div className="relative">
             <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
@@ -429,7 +429,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
               onChange={e => setAddress(e.target.value)}
               onFocus={() => address.length >= 3 && setShowSuggestions(true)}
               placeholder="Via, Piazza, Città..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-medium"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium shadow-sm"
             />
           </div>
           {showSuggestions && suggestions.length > 0 && (
@@ -455,7 +455,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
 
         <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between pl-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase">Orario & Promemoria</label>
+            <label className="text-xs font-bold uppercase tracking-wider pl-1 text-indigo-600">Orario & Promemoria</label>
           </div>
           <div className="flex flex-wrap gap-2 mb-2">
             {time && (
@@ -483,10 +483,9 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
                 value={time} 
                 onChange={e => {
                   setTime(e.target.value);
-                  // Auto-blur after change to potentially close mobile picker
                   e.target.blur();
                 }}
-                className="w-full pl-10 pr-2 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold focus:ring-1 focus:ring-indigo-500 h-10"
+                className="w-full pl-10 pr-2 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold focus:ring-1 focus:ring-indigo-500 h-10 shadow-sm"
               />
             </div>
             
@@ -496,13 +495,13 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
                 type="number" 
                 value={newReminderValue} 
                 onChange={e => setNewReminderValue(e.target.value)}
-                className="w-16 px-3 py-2 bg-gray-50 border-none rounded-xl text-sm h-10"
+                className="w-16 px-3 py-2 bg-gray-50 border-none rounded-xl text-sm h-10 shadow-sm"
                 placeholder="N."
               />
               <select 
                 value={newReminderUnit} 
                 onChange={e => setNewReminderUnit(e.target.value as any)}
-                className="flex-1 px-2 py-2 bg-gray-50 border-none rounded-xl text-sm h-10"
+                className="flex-1 px-2 py-2 bg-gray-50 border-none rounded-xl text-sm h-10 shadow-sm font-medium"
               >
                 <option value="minutes">Min</option>
                 <option value="hours">Ore</option>
@@ -511,7 +510,7 @@ function AppointmentForm({ onSave, onCancel, initialData }: AppointmentFormProps
               <button 
                 type="button" 
                 onClick={addReminder}
-                className="px-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all font-black text-[10px] h-10 whitespace-nowrap"
+                className="px-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all font-black text-[10px] h-10 whitespace-nowrap shadow-sm"
               >
                 ALERT
               </button>
@@ -551,18 +550,21 @@ function NoteForm({ onSave, onCancel, initialData }: NoteFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm space-y-4">
-      <h3 className="text-sm font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2">
+      <h3 className="text-sm font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2 mb-2">
         <StickyNote size={16} /> 
         {initialData ? 'Modifica Nota' : 'Nuova Nota'}
       </h3>
-      <textarea 
-        value={text} 
-        onChange={e => setText(e.target.value)}
-        placeholder="Scrivi qualcosa qui..."
-        rows={6}
-        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-500 font-medium resize-none shadow-inner"
-        autoFocus
-      />
+      <div className="space-y-1">
+        <label className="text-xs font-bold uppercase tracking-wider pl-1 text-amber-600">Scrivi nota</label>
+        <textarea 
+          value={text} 
+          onChange={e => setText(e.target.value)}
+          placeholder="Scrivi qualcosa qui..."
+          rows={6}
+          className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-500 text-sm font-medium resize-none shadow-inner"
+          autoFocus
+        />
+      </div>
       <button
         type="submit"
         disabled={isSubmitting}

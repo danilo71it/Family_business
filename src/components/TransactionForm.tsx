@@ -220,7 +220,11 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
 
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Descrizione</label>
+          <label className={`text-xs font-bold uppercase tracking-wider pl-1 ${
+            type === 'expense' ? 'text-red-500' : 'text-green-600'
+          }`}>
+            Descrizione transazione
+          </label>
           <div className="relative">
             <FileText size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -228,15 +232,19 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               onFocus={(e) => e.target.select()}
-              placeholder="Descrizione o Appuntamento"
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              placeholder="Descrizione transazione"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Importo</label>
+            <label className={`text-xs font-bold uppercase tracking-wider pl-1 ${
+              type === 'expense' ? 'text-red-500' : 'text-green-600'
+            }`}>
+              Importo
+            </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium font-mono">€</span>
               <input
@@ -254,7 +262,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
                 }}
                 placeholder={isUnknownAmount ? "SCONOSCIUTO" : (isEstimate ? "STIMA" : "0.00")}
                 disabled={isUnknownAmount}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-lg disabled:opacity-50"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-base disabled:opacity-50"
               />
             </div>
           </div>
@@ -267,7 +275,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           <button
             type="button"
             onClick={() => setIsPrivacyActive(!isPrivacyActive)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${
               isPrivacyActive ? 'bg-gray-800 border-gray-800 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -285,7 +293,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
                 setIsEstimate(true); // Unknown is technically variable
               }
             }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${
               isUnknownAmount ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -293,12 +301,11 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             Importo Sconosciuto
           </button>
 
-          {/* Remind Toggle Button - Defaulted to OFF */}
           {/* Recurring Toggle Button */}
           <button
             type="button"
             onClick={() => setRecurring(!recurring)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${
               recurring ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
             }`}
           >
@@ -311,7 +318,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
             <button
               type="button"
               onClick={() => setIsEstimate(!isEstimate)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all border animate-in fade-in zoom-in-95 duration-200 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border animate-in fade-in zoom-in-95 duration-200 ${
                 isEstimate ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
               }`}
             >
@@ -343,7 +350,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
               <select
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 appearance-none"
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 appearance-none font-medium"
               >
                 <option value="daily">Giornaliera</option>
                 <option value="weekly">Settimanale</option>
@@ -361,7 +368,7 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
                   value={occurrenceCount}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => setOccurrenceCount(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-medium"
                 />
               </div>
             )}
@@ -369,56 +376,30 @@ export function TransactionForm({ onAdd, onUpdate, onDelete, onDeleteSeries, use
           <button
             type="button"
             onClick={() => setIsInfinite(!isInfinite)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all w-fit ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all w-fit ${
               isInfinite ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-blue-300'
             }`}
           >
             {isInfinite ? <Repeat size={14} /> : <Plus size={14} />}
-            {isInfinite ? 'Ripeti per sempre (max 5 anni)' : 'Imposta come infinito'}
+            {isInfinite ? 'Ripeti per sempre' : 'Imposta come infinito'}
           </button>
         </div>
       )}
 
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Indirizzo</label>
-          <div className="relative">
-            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Via, Città..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Orario</label>
-          <div className="relative">
-            <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => {
-                setTime(e.target.value);
-                e.target.blur();
-              }}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 pl-1">Note</label>
+      <div className="space-y-1">
+        <label className={`text-xs font-bold uppercase tracking-wider pl-1 ${
+          type === 'expense' ? 'text-red-500' : 'text-green-600'
+        }`}>
+          Note
+        </label>
         <div className="relative">
           <StickyNote size={18} className="absolute left-4 top-3 text-gray-400" />
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Aggiungi appunti per questo giorno..."
+            placeholder="Eventuali note"
             rows={3}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium resize-none"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm font-medium resize-none shadow-sm"
           />
         </div>
       </div>
